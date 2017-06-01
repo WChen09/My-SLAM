@@ -4,7 +4,7 @@ netCfgPath: "./darknet_cfg/yolo.cfg"
 weightPath: "./darknet_cfg/yolo.weights"
 nameListPath: "./darknet_cfg/coco.names"
 alphabetPath: "./darknet_cfg/labels/"
-imgPathFile: "./robotcar/2015-11-11-14-13-43/imagePath.txt"
+imgPathFile: "./slam_cfg/imagePath.txt"
 saveVideo: "./robotcar2015-11-11-14-13-43.avi"
 nClass: 6
 thresh: 0.40

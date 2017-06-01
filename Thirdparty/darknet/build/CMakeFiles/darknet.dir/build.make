@@ -137,6 +137,7 @@ CMakeFiles/darknet.dir/src/darknet_generated_activation_kernels.cu.o: /usr/local
 CMakeFiles/darknet.dir/src/darknet_generated_activation_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_runtime_api.h
 CMakeFiles/darknet.dir/src/darknet_generated_activation_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_surface_types.h
 CMakeFiles/darknet.dir/src/darknet_generated_activation_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_texture_types.h
+CMakeFiles/darknet.dir/src/darknet_generated_activation_kernels.cu.o: /usr/local/cuda-8.0/include/cudnn.h
 CMakeFiles/darknet.dir/src/darknet_generated_activation_kernels.cu.o: /usr/local/cuda-8.0/include/curand.h
 CMakeFiles/darknet.dir/src/darknet_generated_activation_kernels.cu.o: /usr/local/cuda-8.0/include/device_atomic_functions.h
 CMakeFiles/darknet.dir/src/darknet_generated_activation_kernels.cu.o: /usr/local/cuda-8.0/include/device_atomic_functions.hpp
@@ -280,6 +281,7 @@ CMakeFiles/darknet.dir/src/darknet_generated_avgpool_layer_kernels.cu.o: /usr/lo
 CMakeFiles/darknet.dir/src/darknet_generated_avgpool_layer_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_runtime_api.h
 CMakeFiles/darknet.dir/src/darknet_generated_avgpool_layer_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_surface_types.h
 CMakeFiles/darknet.dir/src/darknet_generated_avgpool_layer_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_texture_types.h
+CMakeFiles/darknet.dir/src/darknet_generated_avgpool_layer_kernels.cu.o: /usr/local/cuda-8.0/include/cudnn.h
 CMakeFiles/darknet.dir/src/darknet_generated_avgpool_layer_kernels.cu.o: /usr/local/cuda-8.0/include/curand.h
 CMakeFiles/darknet.dir/src/darknet_generated_avgpool_layer_kernels.cu.o: /usr/local/cuda-8.0/include/device_atomic_functions.h
 CMakeFiles/darknet.dir/src/darknet_generated_avgpool_layer_kernels.cu.o: /usr/local/cuda-8.0/include/device_atomic_functions.hpp
@@ -411,6 +413,7 @@ CMakeFiles/darknet.dir/src/darknet_generated_blas_kernels.cu.o: /usr/local/cuda-
 CMakeFiles/darknet.dir/src/darknet_generated_blas_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_runtime_api.h
 CMakeFiles/darknet.dir/src/darknet_generated_blas_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_surface_types.h
 CMakeFiles/darknet.dir/src/darknet_generated_blas_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_texture_types.h
+CMakeFiles/darknet.dir/src/darknet_generated_blas_kernels.cu.o: /usr/local/cuda-8.0/include/cudnn.h
 CMakeFiles/darknet.dir/src/darknet_generated_blas_kernels.cu.o: /usr/local/cuda-8.0/include/curand.h
 CMakeFiles/darknet.dir/src/darknet_generated_blas_kernels.cu.o: /usr/local/cuda-8.0/include/device_atomic_functions.h
 CMakeFiles/darknet.dir/src/darknet_generated_blas_kernels.cu.o: /usr/local/cuda-8.0/include/device_atomic_functions.hpp
@@ -540,6 +543,7 @@ CMakeFiles/darknet.dir/src/darknet_generated_col2im_kernels.cu.o: /usr/local/cud
 CMakeFiles/darknet.dir/src/darknet_generated_col2im_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_runtime_api.h
 CMakeFiles/darknet.dir/src/darknet_generated_col2im_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_surface_types.h
 CMakeFiles/darknet.dir/src/darknet_generated_col2im_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_texture_types.h
+CMakeFiles/darknet.dir/src/darknet_generated_col2im_kernels.cu.o: /usr/local/cuda-8.0/include/cudnn.h
 CMakeFiles/darknet.dir/src/darknet_generated_col2im_kernels.cu.o: /usr/local/cuda-8.0/include/curand.h
 CMakeFiles/darknet.dir/src/darknet_generated_col2im_kernels.cu.o: /usr/local/cuda-8.0/include/device_atomic_functions.h
 CMakeFiles/darknet.dir/src/darknet_generated_col2im_kernels.cu.o: /usr/local/cuda-8.0/include/device_atomic_functions.hpp
@@ -689,6 +693,7 @@ CMakeFiles/darknet.dir/src/darknet_generated_convolutional_kernels.cu.o: /usr/lo
 CMakeFiles/darknet.dir/src/darknet_generated_convolutional_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_runtime_api.h
 CMakeFiles/darknet.dir/src/darknet_generated_convolutional_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_surface_types.h
 CMakeFiles/darknet.dir/src/darknet_generated_convolutional_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_texture_types.h
+CMakeFiles/darknet.dir/src/darknet_generated_convolutional_kernels.cu.o: /usr/local/cuda-8.0/include/cudnn.h
 CMakeFiles/darknet.dir/src/darknet_generated_convolutional_kernels.cu.o: /usr/local/cuda-8.0/include/curand.h
 CMakeFiles/darknet.dir/src/darknet_generated_convolutional_kernels.cu.o: /usr/local/cuda-8.0/include/device_atomic_functions.h
 CMakeFiles/darknet.dir/src/darknet_generated_convolutional_kernels.cu.o: /usr/local/cuda-8.0/include/device_atomic_functions.hpp
@@ -833,6 +838,7 @@ CMakeFiles/darknet.dir/src/darknet_generated_crop_layer_kernels.cu.o: /usr/local
 CMakeFiles/darknet.dir/src/darknet_generated_crop_layer_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_runtime_api.h
 CMakeFiles/darknet.dir/src/darknet_generated_crop_layer_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_surface_types.h
 CMakeFiles/darknet.dir/src/darknet_generated_crop_layer_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_texture_types.h
+CMakeFiles/darknet.dir/src/darknet_generated_crop_layer_kernels.cu.o: /usr/local/cuda-8.0/include/cudnn.h
 CMakeFiles/darknet.dir/src/darknet_generated_crop_layer_kernels.cu.o: /usr/local/cuda-8.0/include/curand.h
 CMakeFiles/darknet.dir/src/darknet_generated_crop_layer_kernels.cu.o: /usr/local/cuda-8.0/include/device_atomic_functions.h
 CMakeFiles/darknet.dir/src/darknet_generated_crop_layer_kernels.cu.o: /usr/local/cuda-8.0/include/device_atomic_functions.hpp
@@ -977,6 +983,7 @@ CMakeFiles/darknet.dir/src/darknet_generated_dropout_layer_kernels.cu.o: /usr/lo
 CMakeFiles/darknet.dir/src/darknet_generated_dropout_layer_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_runtime_api.h
 CMakeFiles/darknet.dir/src/darknet_generated_dropout_layer_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_surface_types.h
 CMakeFiles/darknet.dir/src/darknet_generated_dropout_layer_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_texture_types.h
+CMakeFiles/darknet.dir/src/darknet_generated_dropout_layer_kernels.cu.o: /usr/local/cuda-8.0/include/cudnn.h
 CMakeFiles/darknet.dir/src/darknet_generated_dropout_layer_kernels.cu.o: /usr/local/cuda-8.0/include/curand.h
 CMakeFiles/darknet.dir/src/darknet_generated_dropout_layer_kernels.cu.o: /usr/local/cuda-8.0/include/device_atomic_functions.h
 CMakeFiles/darknet.dir/src/darknet_generated_dropout_layer_kernels.cu.o: /usr/local/cuda-8.0/include/device_atomic_functions.hpp
@@ -1126,6 +1133,7 @@ CMakeFiles/darknet.dir/src/darknet_generated_deconvolutional_kernels.cu.o: /usr/
 CMakeFiles/darknet.dir/src/darknet_generated_deconvolutional_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_runtime_api.h
 CMakeFiles/darknet.dir/src/darknet_generated_deconvolutional_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_surface_types.h
 CMakeFiles/darknet.dir/src/darknet_generated_deconvolutional_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_texture_types.h
+CMakeFiles/darknet.dir/src/darknet_generated_deconvolutional_kernels.cu.o: /usr/local/cuda-8.0/include/cudnn.h
 CMakeFiles/darknet.dir/src/darknet_generated_deconvolutional_kernels.cu.o: /usr/local/cuda-8.0/include/curand.h
 CMakeFiles/darknet.dir/src/darknet_generated_deconvolutional_kernels.cu.o: /usr/local/cuda-8.0/include/device_atomic_functions.h
 CMakeFiles/darknet.dir/src/darknet_generated_deconvolutional_kernels.cu.o: /usr/local/cuda-8.0/include/device_atomic_functions.hpp
@@ -1255,6 +1263,7 @@ CMakeFiles/darknet.dir/src/darknet_generated_im2col_kernels.cu.o: /usr/local/cud
 CMakeFiles/darknet.dir/src/darknet_generated_im2col_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_runtime_api.h
 CMakeFiles/darknet.dir/src/darknet_generated_im2col_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_surface_types.h
 CMakeFiles/darknet.dir/src/darknet_generated_im2col_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_texture_types.h
+CMakeFiles/darknet.dir/src/darknet_generated_im2col_kernels.cu.o: /usr/local/cuda-8.0/include/cudnn.h
 CMakeFiles/darknet.dir/src/darknet_generated_im2col_kernels.cu.o: /usr/local/cuda-8.0/include/curand.h
 CMakeFiles/darknet.dir/src/darknet_generated_im2col_kernels.cu.o: /usr/local/cuda-8.0/include/device_atomic_functions.h
 CMakeFiles/darknet.dir/src/darknet_generated_im2col_kernels.cu.o: /usr/local/cuda-8.0/include/device_atomic_functions.hpp
@@ -1398,6 +1407,7 @@ CMakeFiles/darknet.dir/src/darknet_generated_maxpool_layer_kernels.cu.o: /usr/lo
 CMakeFiles/darknet.dir/src/darknet_generated_maxpool_layer_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_runtime_api.h
 CMakeFiles/darknet.dir/src/darknet_generated_maxpool_layer_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_surface_types.h
 CMakeFiles/darknet.dir/src/darknet_generated_maxpool_layer_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_texture_types.h
+CMakeFiles/darknet.dir/src/darknet_generated_maxpool_layer_kernels.cu.o: /usr/local/cuda-8.0/include/cudnn.h
 CMakeFiles/darknet.dir/src/darknet_generated_maxpool_layer_kernels.cu.o: /usr/local/cuda-8.0/include/curand.h
 CMakeFiles/darknet.dir/src/darknet_generated_maxpool_layer_kernels.cu.o: /usr/local/cuda-8.0/include/device_atomic_functions.h
 CMakeFiles/darknet.dir/src/darknet_generated_maxpool_layer_kernels.cu.o: /usr/local/cuda-8.0/include/device_atomic_functions.hpp
@@ -1563,6 +1573,7 @@ CMakeFiles/darknet.dir/src/darknet_generated_network_kernels.cu.o: /usr/local/cu
 CMakeFiles/darknet.dir/src/darknet_generated_network_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_runtime_api.h
 CMakeFiles/darknet.dir/src/darknet_generated_network_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_surface_types.h
 CMakeFiles/darknet.dir/src/darknet_generated_network_kernels.cu.o: /usr/local/cuda-8.0/include/cuda_texture_types.h
+CMakeFiles/darknet.dir/src/darknet_generated_network_kernels.cu.o: /usr/local/cuda-8.0/include/cudnn.h
 CMakeFiles/darknet.dir/src/darknet_generated_network_kernels.cu.o: /usr/local/cuda-8.0/include/curand.h
 CMakeFiles/darknet.dir/src/darknet_generated_network_kernels.cu.o: /usr/local/cuda-8.0/include/device_atomic_functions.h
 CMakeFiles/darknet.dir/src/darknet_generated_network_kernels.cu.o: /usr/local/cuda-8.0/include/device_atomic_functions.hpp
@@ -3169,10 +3180,12 @@ darknet_EXTERNAL_OBJECTS = \
 ../lib/libdarknet.so: /usr/lib/x86_64-linux-gnu/librt.so
 ../lib/libdarknet.so: /usr/local/cuda-8.0/lib64/libcublas.so
 ../lib/libdarknet.so: /usr/local/cuda-8.0/lib64/libcurand.so
+../lib/libdarknet.so: /usr/local/cuda-8.0/lib64/libcudnn.so
 ../lib/libdarknet.so: /usr/local/cuda-8.0/lib64/libcudart_static.a
 ../lib/libdarknet.so: /usr/lib/x86_64-linux-gnu/librt.so
 ../lib/libdarknet.so: /usr/local/cuda-8.0/lib64/libcublas.so
 ../lib/libdarknet.so: /usr/local/cuda-8.0/lib64/libcurand.so
+../lib/libdarknet.so: /usr/local/cuda-8.0/lib64/libcudnn.so
 ../lib/libdarknet.so: /home/wchen/opencv-3.1.0/build/lib/libopencv_cudawarping.so.3.1.0
 ../lib/libdarknet.so: /home/wchen/opencv-3.1.0/build/lib/libopencv_objdetect.so.3.1.0
 ../lib/libdarknet.so: /home/wchen/opencv-3.1.0/build/lib/libopencv_cudafilters.so.3.1.0

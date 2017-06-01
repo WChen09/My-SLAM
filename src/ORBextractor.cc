@@ -61,6 +61,8 @@
 #include <vector>
 
 #include "ORBextractor.h"
+#include <chrono>
+#include <iostream>
 
 
 using namespace cv;
@@ -1117,8 +1119,11 @@ void ORBextractor::ComputePyramid(cv::Mat image)
         // Compute the resized image
         if( level != 0 )
         {
+//            std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
             resize(mvImagePyramid[level-1], mvImagePyramid[level], sz, 0, 0, INTER_LINEAR);
-
+//            std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
+//            cout << "Pyramid " << sz << " duration: "
+//                 << std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count() << endl;
             copyMakeBorder(mvImagePyramid[level], temp, EDGE_THRESHOLD, EDGE_THRESHOLD, EDGE_THRESHOLD, EDGE_THRESHOLD,
                            BORDER_REFLECT_101+BORDER_ISOLATED);            
         }

@@ -283,6 +283,15 @@ CUDA_rt_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/librt.so
 //The directory containing a CMake configuration file for CUDNN.
 CUDNN_DIR:PATH=CUDNN_DIR-NOTFOUND
 
+//Path to a file.
+CUDNN_INCLUDE_DIR:PATH=/usr/local/cuda-8.0/include
+
+//Path to a library.
+CUDNN_LIBRARY:FILEPATH=/usr/local/cuda-8.0/lib64/libcudnn.so
+
+//Folder contains NVIDIA cuDNN
+CUDNN_ROOT_DIR:PATH=
+
 //Path where debug 3rdparty OpenCV dependencies are located
 OpenCV_3RDPARTY_LIB_DIR_DBG:PATH=
 
@@ -297,11 +306,14 @@ OpenCV_LIB_DIR_DBG:PATH=
 //Path where release OpenCV libraries are located
 OpenCV_LIB_DIR_OPT:PATH=
 
+//The directory containing a CMake configuration file for cuDNN.
+cuDNN_DIR:PATH=cuDNN_DIR-NOTFOUND
+
 //Value Computed by CMake
 darknet_BINARY_DIR:STATIC=/home/wchen/ORB_SLAM2/Thirdparty/darknet/build
 
 //Dependencies for the target
-darknet_LIB_DEPENDS:STATIC=general;/usr/local/cuda-8.0/lib64/libcudart_static.a;general;-lpthread;general;dl;general;/usr/lib/x86_64-linux-gnu/librt.so;general;opencv_videostab;general;opencv_videoio;general;opencv_video;general;opencv_superres;general;opencv_stitching;general;opencv_shape;general;opencv_photo;general;opencv_objdetect;general;opencv_ml;general;opencv_imgproc;general;opencv_imgcodecs;general;opencv_highgui;general;opencv_flann;general;opencv_features2d;general;opencv_cudev;general;opencv_cudawarping;general;opencv_cudastereo;general;opencv_cudaoptflow;general;opencv_cudaobjdetect;general;opencv_cudalegacy;general;opencv_cudaimgproc;general;opencv_cudafilters;general;opencv_cudafeatures2d;general;opencv_cudacodec;general;opencv_cudabgsegm;general;opencv_cudaarithm;general;opencv_core;general;opencv_calib3d;general;/usr/local/cuda-8.0/lib64/libcudart_static.a;general;-lpthread;general;dl;general;/usr/lib/x86_64-linux-gnu/librt.so;general;/usr/local/cuda-8.0/lib64/libcublas.so;general;/usr/local/cuda-8.0/lib64/libcurand.so;general;-lpthread;
+darknet_LIB_DEPENDS:STATIC=general;/usr/local/cuda-8.0/lib64/libcudart_static.a;general;-lpthread;general;dl;general;/usr/lib/x86_64-linux-gnu/librt.so;general;opencv_videostab;general;opencv_videoio;general;opencv_video;general;opencv_superres;general;opencv_stitching;general;opencv_shape;general;opencv_photo;general;opencv_objdetect;general;opencv_ml;general;opencv_imgproc;general;opencv_imgcodecs;general;opencv_highgui;general;opencv_flann;general;opencv_features2d;general;opencv_cudev;general;opencv_cudawarping;general;opencv_cudastereo;general;opencv_cudaoptflow;general;opencv_cudaobjdetect;general;opencv_cudalegacy;general;opencv_cudaimgproc;general;opencv_cudafilters;general;opencv_cudafeatures2d;general;opencv_cudacodec;general;opencv_cudabgsegm;general;opencv_cudaarithm;general;opencv_core;general;opencv_calib3d;general;/usr/local/cuda-8.0/lib64/libcudart_static.a;general;-lpthread;general;dl;general;/usr/lib/x86_64-linux-gnu/librt.so;general;/usr/local/cuda-8.0/lib64/libcublas.so;general;/usr/local/cuda-8.0/lib64/libcurand.so;general;-lpthread;general;/usr/local/cuda-8.0/lib64/libcudnn.so;
 
 //Value Computed by CMake
 darknet_SOURCE_DIR:STATIC=/home/wchen/ORB_SLAM2/Thirdparty/darknet
@@ -524,8 +536,16 @@ CUDA_npps_LIBRARY-ADVANCED:INTERNAL=1
 CUDA_parse_cubin:INTERNAL=/usr/share/cmake-3.5/Modules/FindCUDA/parse_cubin.cmake
 //Location of run_nvcc.cmake
 CUDA_run_nvcc:INTERNAL=/usr/share/cmake-3.5/Modules/FindCUDA/run_nvcc.cmake
+//ADVANCED property for variable: CUDNN_INCLUDE_DIR
+CUDNN_INCLUDE_DIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CUDNN_LIBRARY
+CUDNN_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CUDNN_ROOT_DIR
+CUDNN_ROOT_DIR-ADVANCED:INTERNAL=1
 //Details about finding CUDA
 FIND_PACKAGE_MESSAGE_DETAILS_CUDA:INTERNAL=[/usr/local/cuda-8.0][/usr/local/cuda-8.0/bin/nvcc][/usr/local/cuda-8.0/include][/usr/local/cuda-8.0/lib64/libcudart.so][v8.0()]
+//Details about finding CUDNN
+FIND_PACKAGE_MESSAGE_DETAILS_CUDNN:INTERNAL=[/usr/local/cuda-8.0/include][/usr/local/cuda-8.0/lib64/libcudnn.so][v()]
 //Details about finding Threads
 FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
 //ADVANCED property for variable: OpenCV_3RDPARTY_LIB_DIR_DBG
