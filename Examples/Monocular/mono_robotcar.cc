@@ -31,7 +31,6 @@
 
 //darknet
 #include"Thirdparty/darknet/src/yolo.h"
-#include<ctime>
 #include <string>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -59,7 +58,7 @@ int main(int argc, char** argv)
     }
 
 //    std::ofstream file("out.csv");
-    int frame_no = 0;
+    int nFrame = 0;
 
     Yolo yolo;
     yolo.readConfig(argv[1]);
@@ -74,7 +73,7 @@ int main(int argc, char** argv)
     }
 
     string videoFile = yolo.getVideoPath();
-    VideoWriter recordVideo(videoFile, VideoWriter::fourcc('M','J','P','G'), 10, Size(1280,820));
+    VideoWriter recordVideo(videoFile, VideoWriter::fourcc('M','J','P','G'), 10, Size(1280,960));
 
     cv::Mat img;
     string imgPathLine;
@@ -89,21 +88,19 @@ int main(int argc, char** argv)
     while(getline(imgPathFile, imgPathLine))
     {
         img = imread(imgPathLine.c_str());
-        img = img(Range(0,820), Range::all());
+//        img = img(Range(0,820), Range::all());
         if(img.empty())
             break;
 
-        //cv::resize(img, img, cv::Size(544,544));
-
         std::vector<DetectedObject> detection;
-        clock_t start, finish;
-        start = clock();
+
+        std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
         yolo.detect(img, detection);
-        finish = clock();
+        std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
+        double ttrack= std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count();
+        std::cout << ttrack << std::endl;
 
-        std::cout << (double)(finish - start)/CLOCKS_PER_SEC << std::endl;
-
-        std ::cout << "detect %d objects " << int(detection.size()) << std::endl;
+        std ::cout << "Frame: " << nFrame << " detect objects " << int(detection.size()) << std::endl;
 
         for(int i = 0; i < detection.size(); i++)
         {
@@ -120,7 +117,7 @@ int main(int argc, char** argv)
         recordVideo.write(img);
         cv::imshow("yolo-robotcar demo", img);
         cv::waitKey(1);
-        frame_no++;
+        nFrame++;
     }
     img.release();
     recordVideo.release();

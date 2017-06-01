@@ -91,23 +91,11 @@ void Yolo::loadConfig(){
         throw std::runtime_error("Can't load weights, there is a problem with network generation");
     }
 
-
     load_weights(&net, const_cast<char*>(weightfile.c_str()));
     set_batch_network(&net, 1);
 
     //setAlphabet
     alphabet = load_alphabet_custom(const_cast<char*>(alphabet_path.c_str()));
-
-//    //setNamelist
-//    names = get_labels(const_cast<char*>(name_list.c_str()));
-
-//    //show names
-//    std::cout << "--------" << std::endl;
-//    std::cout << "Object class names: " << std::endl;
-//    for(int i = 0; i < nClass; i++){
-//        std::cout << names[i] << std::endl;
-//    }
-
 }
 
 char* Yolo::getImgPath(){
@@ -145,9 +133,10 @@ void Yolo::detect(const cv::Mat& img, std::vector<DetectedObject>& detection)con
     cv::Mat img_local;
 
     try {
-        cv::cvtColor(img, img_local, cv::COLOR_BGR2RGB);
 
+        cv::cvtColor(img, img_local, cv::COLOR_BGR2RGB);
         ocv_to_yoloimg(img_local, im);
+
         sized = resize_image(im, net.w, net.h);
 
         layer l = net.layers[net.n - 1];

@@ -80,6 +80,7 @@ SET(CUDA_NVCC_DEPEND
  "/usr/local/cuda-8.0/include/cuda_runtime_api.h"
  "/usr/local/cuda-8.0/include/cuda_surface_types.h"
  "/usr/local/cuda-8.0/include/cuda_texture_types.h"
+ "/usr/local/cuda-8.0/include/cudnn.h"
  "/usr/local/cuda-8.0/include/curand.h"
  "/usr/local/cuda-8.0/include/device_atomic_functions.h"
  "/usr/local/cuda-8.0/include/device_atomic_functions.hpp"

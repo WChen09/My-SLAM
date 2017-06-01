@@ -22,6 +22,7 @@ set(CMAKE_MAKEFILE_DEPENDS
   "CMakeFiles/darknet.dir/src/darknet_generated_im2col_kernels.cu.o.depend"
   "CMakeFiles/darknet.dir/src/darknet_generated_maxpool_layer_kernels.cu.o.depend"
   "CMakeFiles/darknet.dir/src/darknet_generated_network_kernels.cu.o.depend"
+  "../cmake_modules/FindcuDNN.cmake"
   "/home/wchen/opencv-3.1.0/build/OpenCVConfig-version.cmake"
   "/home/wchen/opencv-3.1.0/build/OpenCVConfig.cmake"
   "/home/wchen/opencv-3.1.0/build/OpenCVModules.cmake"

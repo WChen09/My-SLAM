@@ -11,26 +11,31 @@ set(PROJECT_NAME darknet)
 
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/)
 
-add_definitions(-DOPENCV)
-add_definitions(-DGPU)
-add_definitions(-DCUDNN)
+
 
 project(${PROJECT_NAME})
+
+LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 
 #OpenCV package
 set(OpenCV_DIR /home/wchen/opencv-3.1.0/build/)
 find_package(OpenCV 3.1.0 REQUIRED)
 MESSAGE("OpenCV version: ${OpenCV_VERSION}")
 include_directories(${OpenCV_INCLUDE_DIRS})
-
+add_definitions(-DOPENCV)
 
 #CUDA package
 set(CUDA_DIR /usr/local/cuda/)
 find_package(CUDA REQUIRED)
-set(CUDNN_DIR /usr/local/cuda/lib64)
-find_package(CUDNN REQUIRED)
 include_directories(${CUDA_DIR}/include)
+add_definitions(-DGPU)
+
 #cudnn package
+find_package(cuDNN REQUIRED)
+if(CUDNN_FOUND)
+    include_directories(${CUDNN_INCLUDE_DIRS})
+    add_definitions(-DCUDNN)
+endif()
 
 
 find_package(Threads REQUIRED)
@@ -162,5 +167,5 @@ target_link_libraries(
         ${CUDA_LIBRARIES}
         ${CUDA_CUBLAS_LIBRARIES}
         ${CUDA_curand_LIBRARY}
-        ${CMAKE_THREAD_LIBS_INIT})
-
+        ${CMAKE_THREAD_LIBS_INIT}
+        ${CUDNN_LIBRARIES})
