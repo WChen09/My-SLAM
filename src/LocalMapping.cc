@@ -116,6 +116,7 @@ void LocalMapping::InsertKeyFrame(KeyFrame *pKF)
 {
     unique_lock<mutex> lock(mMutexNewKFs);
     mlNewKeyFrames.push_back(pKF);
+    cout << "add KF " << pKF->mnId << "frame ID: " << pKF->mnFrameId << endl;
     mbAbortBA=true;
 }
 

@@ -275,6 +275,8 @@ void Tracking::Track()
 
     mLastProcessedState=mState;
 
+    cout << "new image " << mCurrentFrame.mnId << endl;
+
     // Get Map Mutex -> Map cannot be changed
     unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
 
@@ -313,8 +315,9 @@ void Tracking::Track()
                 else
                 {
                     bOK = TrackWithMotionModel();
-                    if(!bOK)
+                    if(!bOK){
                         bOK = TrackReferenceKeyFrame();
+                    }
                 }
             }
             else
@@ -401,6 +404,8 @@ void Tracking::Track()
         {
             if(bOK)
                 bOK = TrackLocalMap();
+            if(!bOK)
+                cout << "Track lost because of TrackLocalMap" << endl;
         }
         else
         {
@@ -431,8 +436,10 @@ void Tracking::Track()
                 mVelocity = mCurrentFrame.mTcw*LastTwc;
             }
             else
+            {
+                cout << "mLastFrame.mTcw is empty" << endl;
                 mVelocity = cv::Mat();
-
+            }
             mpMapDrawer->SetCurrentCameraPose(mCurrentFrame.mTcw);
 
             // Clean VO matches
@@ -446,7 +453,7 @@ void Tracking::Track()
                         mCurrentFrame.mvpMapPoints[i]=static_cast<MapPoint*>(NULL);
                     }
             }
-
+            // for monocular case, mlpTemporalPoints is empty
             // Delete temporal MapPoints
             for(list<MapPoint*>::iterator lit = mlpTemporalPoints.begin(), lend =  mlpTemporalPoints.end(); lit!=lend; lit++)
             {
@@ -490,7 +497,7 @@ void Tracking::Track()
     // Store frame pose information to retrieve the complete camera trajectory afterwards.
     if(!mCurrentFrame.mTcw.empty())
     {
-        cv::Mat Tcr = mCurrentFrame.mTcw*mCurrentFrame.mpReferenceKF->GetPoseInverse();
+        cv::Mat Tcr = mCurrentFrame.mTcw*mCurrentFrame.mpReferenceKF->GetPoseInverse(); //Tcr  = Tcw(c) * Twc(r)
         mlRelativeFramePoses.push_back(Tcr);
         mlpReferences.push_back(mpReferenceKF);
         mlFrameTimes.push_back(mCurrentFrame.mTimeStamp);
@@ -758,6 +765,7 @@ void Tracking::CheckReplacedInLastFrame()
 
 bool Tracking::TrackReferenceKeyFrame()
 {
+    cerr << "into TrackReferenceKeyFrame" << endl;
     // Compute Bag of Words vector
     mCurrentFrame.ComputeBoW();
 
@@ -767,10 +775,10 @@ bool Tracking::TrackReferenceKeyFrame()
     vector<MapPoint*> vpMapPointMatches;
 
     int nmatches = matcher.SearchByBoW(mpReferenceKF,mCurrentFrame,vpMapPointMatches);
-
+    cout << "nmatches: " << nmatches << endl;
     if(nmatches<15)
         return false;
-
+    cout << "TrackReferenceKeyFrame nmatches: " << nmatches << endl;
     mCurrentFrame.mvpMapPoints = vpMapPointMatches;
     mCurrentFrame.SetPose(mLastFrame.mTcw);
 
@@ -883,20 +891,18 @@ bool Tracking::TrackWithMotionModel()
     if(mSensor!=System::STEREO)
         th=15;
     else
-        th=7;
+        th=12;//change from 7 to 12
     int nmatches = matcher.SearchByProjection(mCurrentFrame,mLastFrame,th,mSensor==System::MONOCULAR);
-
     // If few matches, uses a wider window search
     if(nmatches<20)
     {
         fill(mCurrentFrame.mvpMapPoints.begin(),mCurrentFrame.mvpMapPoints.end(),static_cast<MapPoint*>(NULL));
         nmatches = matcher.SearchByProjection(mCurrentFrame,mLastFrame,2*th,mSensor==System::MONOCULAR);
     }
-
     if(nmatches<20)
         return false;
 
-    // Optimize frame pose with all matches
+    // Optimize frame pose with all matches, and find out outlire MapPoints
     Optimizer::PoseOptimization(&mCurrentFrame);
 
     // Discard outliers
@@ -918,14 +924,13 @@ bool Tracking::TrackWithMotionModel()
             else if(mCurrentFrame.mvpMapPoints[i]->Observations()>0)
                 nmatchesMap++;
         }
-    }    
+    }
 
     if(mbOnlyTracking)
     {
         mbVO = nmatchesMap<10;
         return nmatches>20;
     }
-
     return nmatchesMap>=10;
 }
 
@@ -1180,7 +1185,7 @@ void Tracking::SearchLocalPoints()
             nToMatch++;
         }
     }
-
+    cout << "SearchLocalPoints find nToMatch: " << nToMatch << endl;
     if(nToMatch>0)
     {
         ORBmatcher matcher(0.8);
@@ -1511,7 +1516,7 @@ void Tracking::Reset()
     {
         mpViewer->RequestStop();
         while(!mpViewer->isStopped())
-            usleep(3000);
+            usleep(3000);//3seconds
     }
 
     // Reset Local Mapping

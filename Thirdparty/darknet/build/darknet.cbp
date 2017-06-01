@@ -1,0 +1,497 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+   <FileVersion major="1" minor="6" />
+   <Project>
+      <Option title="darknet" />
+      <Option makefile_is_custom="1" />
+      <Option compiler="gcc" />
+      <Option virtualFolders="CMake Files\;CMake Files\..\;CMake Files\..\..\;CMake Files\..\..\..\;CMake Files\..\..\..\opencv-3.1.0\;CMake Files\..\..\..\opencv-3.1.0\build\;" />
+      <Build>
+      <Target title="all">
+         <Option working_dir="/home/wchen/ORB_SLAM2/Thirdparty/darknet/build" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/wchen/ORB_SLAM2/Thirdparty/darknet/build/Makefile&quot;  VERBOSE=1 all" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/wchen/ORB_SLAM2/Thirdparty/darknet/build/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/wchen/ORB_SLAM2/Thirdparty/darknet/build/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/wchen/ORB_SLAM2/Thirdparty/darknet/build/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="edit_cache">
+         <Option working_dir="/home/wchen/ORB_SLAM2/Thirdparty/darknet/build" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/wchen/ORB_SLAM2/Thirdparty/darknet/build/Makefile&quot;  VERBOSE=1 edit_cache" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/wchen/ORB_SLAM2/Thirdparty/darknet/build/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/wchen/ORB_SLAM2/Thirdparty/darknet/build/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/wchen/ORB_SLAM2/Thirdparty/darknet/build/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="rebuild_cache">
+         <Option working_dir="/home/wchen/ORB_SLAM2/Thirdparty/darknet/build" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/wchen/ORB_SLAM2/Thirdparty/darknet/build/Makefile&quot;  VERBOSE=1 rebuild_cache" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/wchen/ORB_SLAM2/Thirdparty/darknet/build/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/wchen/ORB_SLAM2/Thirdparty/darknet/build/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/wchen/ORB_SLAM2/Thirdparty/darknet/build/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="darknet">
+         <Option output="/home/wchen/ORB_SLAM2/Thirdparty/darknet/lib/libdarknet.so" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/wchen/ORB_SLAM2/Thirdparty/darknet/build" />
+         <Option object_output="./" />
+         <Option type="3" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add option="-DOPENCV" />
+            <Add option="-DGPU" />
+            <Add directory="/home/wchen/ORB_SLAM2/Thirdparty/darknet/./src" />
+            <Add directory="/home/wchen/opencv-3.1.0/build" />
+            <Add directory="/home/wchen/opencv-3.1.0/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/include/opencv" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/calib3d/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/core/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudaarithm/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudabgsegm/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudacodec/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudafeatures2d/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudafilters/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudaimgproc/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudalegacy/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudaobjdetect/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudaoptflow/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudastereo/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudawarping/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudev/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/features2d/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/flann/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/highgui/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/imgcodecs/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/imgproc/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/ml/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/objdetect/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/photo/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/shape/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/stitching/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/superres/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/ts/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/video/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/videoio/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/videostab/include" />
+            <Add directory="/usr/local/cuda-8.0/include" />
+            <Add directory="/usr/local/cuda/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/wchen/ORB_SLAM2/Thirdparty/darknet/build/Makefile&quot;  VERBOSE=1 darknet" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/wchen/ORB_SLAM2/Thirdparty/darknet/build/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/wchen/ORB_SLAM2/Thirdparty/darknet/build/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/wchen/ORB_SLAM2/Thirdparty/darknet/build/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="darknet/fast">
+         <Option output="/home/wchen/ORB_SLAM2/Thirdparty/darknet/lib/libdarknet.so" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/wchen/ORB_SLAM2/Thirdparty/darknet/build" />
+         <Option object_output="./" />
+         <Option type="3" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add option="-DOPENCV" />
+            <Add option="-DGPU" />
+            <Add directory="/home/wchen/ORB_SLAM2/Thirdparty/darknet/./src" />
+            <Add directory="/home/wchen/opencv-3.1.0/build" />
+            <Add directory="/home/wchen/opencv-3.1.0/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/include/opencv" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/calib3d/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/core/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudaarithm/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudabgsegm/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudacodec/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudafeatures2d/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudafilters/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudaimgproc/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudalegacy/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudaobjdetect/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudaoptflow/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudastereo/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudawarping/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/cudev/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/features2d/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/flann/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/highgui/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/imgcodecs/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/imgproc/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/ml/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/objdetect/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/photo/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/shape/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/stitching/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/superres/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/ts/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/video/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/videoio/include" />
+            <Add directory="/home/wchen/opencv-3.1.0/modules/videostab/include" />
+            <Add directory="/usr/local/cuda-8.0/include" />
+            <Add directory="/usr/local/cuda/include" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/wchen/ORB_SLAM2/Thirdparty/darknet/build/Makefile&quot;  VERBOSE=1 darknet/fast" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/wchen/ORB_SLAM2/Thirdparty/darknet/build/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/wchen/ORB_SLAM2/Thirdparty/darknet/build/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/wchen/ORB_SLAM2/Thirdparty/darknet/build/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      </Build>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/activation_kernels.cu">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/activation_layer.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/activation_layer.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/activations.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/activations.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/art.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/avgpool_layer.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/avgpool_layer.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/avgpool_layer_kernels.cu">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/batchnorm_layer.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/batchnorm_layer.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/blas.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/blas.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/blas_kernels.cu">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/box.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/box.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/captcha.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/cifar.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/classifier.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/classifier.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/coco.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/col2im.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/col2im.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/col2im_kernels.cu">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/compare.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/connected_layer.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/connected_layer.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/convolutional_kernels.cu">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/convolutional_layer.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/convolutional_layer.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/cost_layer.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/cost_layer.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/crnn_layer.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/crnn_layer.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/crop_layer.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/crop_layer.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/crop_layer_kernels.cu">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/cuda.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/cuda.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/darknet.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/data.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/data.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/deconvolutional_kernels.cu">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/deconvolutional_layer.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/deconvolutional_layer.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/demo.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/demo.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/detection_layer.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/detection_layer.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/detector.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/dice.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/dropout_layer.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/dropout_layer.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/dropout_layer_kernels.cu">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/gemm.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/gemm.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/go.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/gru_layer.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/gru_layer.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/im2col.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/im2col.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/im2col_kernels.cu">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/image.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/image.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/layer.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/layer.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/list.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/list.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/local_layer.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/local_layer.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/matrix.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/matrix.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/maxpool_layer.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/maxpool_layer.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/maxpool_layer_kernels.cu">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/network.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/network.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/network_kernels.cu">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/nightmare.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/normalization_layer.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/normalization_layer.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/object.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/option_list.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/option_list.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/parser.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/parser.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/region_layer.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/region_layer.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/reorg_layer.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/reorg_layer.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/rnn.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/rnn_layer.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/rnn_layer.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/rnn_vid.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/route_layer.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/route_layer.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/shortcut_layer.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/shortcut_layer.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/softmax_layer.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/softmax_layer.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/stb_image.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/stb_image_write.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/super.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/swag.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/tag.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/tree.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/tree.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/utils.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/utils.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/voxel.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/writing.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/yolo.cpp">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/src/yolo.h">
+         <Option target="darknet"/>
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\" />
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/../../../opencv-3.1.0/build/OpenCVConfig-version.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\opencv-3.1.0\build\" />
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/../../../opencv-3.1.0/build/OpenCVConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\opencv-3.1.0\build\" />
+      </Unit>
+      <Unit filename="/home/wchen/ORB_SLAM2/Thirdparty/darknet/../../../opencv-3.1.0/build/OpenCVModules.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\opencv-3.1.0\build\" />
+      </Unit>
+   </Project>
+</CodeBlocks_project_file>

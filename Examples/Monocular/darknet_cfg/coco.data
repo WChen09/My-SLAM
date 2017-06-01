@@ -1,0 +1,5 @@
+classes= 6
+train  = /home/wchen/darknet/data/voc/train.txt
+valid  = /home/wchen/darknet/data/voc/2007_test.txt
+names = /home/wchen/ORB_SLAM2/Examples/Monocular/darknet_cfg/coco.names
+backup = backup

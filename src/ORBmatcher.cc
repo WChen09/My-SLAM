@@ -198,9 +198,9 @@ int ORBmatcher::SearchByBoW(KeyFrame* pKF,Frame &F, vector<MapPoint*> &vpMapPoin
 
                 const cv::Mat &dKF= pKF->mDescriptors.row(realIdxKF);
 
-                int bestDist1=256;
+                int bestDist1=256;// best one
                 int bestIdxF =-1 ;
-                int bestDist2=256;
+                int bestDist2=256;// second best one
 
                 for(size_t iF=0; iF<vIndicesF.size(); iF++)
                 {
@@ -213,13 +213,13 @@ int ORBmatcher::SearchByBoW(KeyFrame* pKF,Frame &F, vector<MapPoint*> &vpMapPoin
 
                     const int dist =  DescriptorDistance(dKF,dF);
 
-                    if(dist<bestDist1)
+                    if(dist<bestDist1) //dist < bestDist1 < bestDist2, update both
                     {
                         bestDist2=bestDist1;
                         bestDist1=dist;
                         bestIdxF=realIdxF;
                     }
-                    else if(dist<bestDist2)
+                    else if(dist<bestDist2) // bestDist1 < dist < bestDist2, update bestDist2
                     {
                         bestDist2=dist;
                     }
@@ -1335,15 +1335,15 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
         rotHist[i].reserve(500);
     const float factor = 1.0f/HISTO_LENGTH;
 
-    const cv::Mat Rcw = CurrentFrame.mTcw.rowRange(0,3).colRange(0,3);
-    const cv::Mat tcw = CurrentFrame.mTcw.rowRange(0,3).col(3);
+    const cv::Mat Rcw = CurrentFrame.mTcw.rowRange(0,3).colRange(0,3); //3x3
+    const cv::Mat tcw = CurrentFrame.mTcw.rowRange(0,3).col(3); //3x1
 
-    const cv::Mat twc = -Rcw.t()*tcw;
+    const cv::Mat twc = -Rcw.t()*tcw; // 3x1  R_INV = R.t, but T_INV != T.t
 
     const cv::Mat Rlw = LastFrame.mTcw.rowRange(0,3).colRange(0,3);
     const cv::Mat tlw = LastFrame.mTcw.rowRange(0,3).col(3);
-
-    const cv::Mat tlc = Rlw*twc+tlw;
+    //vector from LastFrame to CurrentFrame expressed in LastFrame
+    const cv::Mat tlc = Rlw*twc+tlw;// Rlw*twc(w) = twc(l), tlc(l) = twc(l) + tlw(l)
 
     const bool bForward = tlc.at<float>(2)>CurrentFrame.mb && !bMono;
     const bool bBackward = -tlc.at<float>(2)>CurrentFrame.mb && !bMono;
