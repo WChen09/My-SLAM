@@ -4,6 +4,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <fstream>
 
+#include <chrono>
+
 Yolo::Yolo()
 {
 
@@ -28,10 +30,9 @@ void Yolo::ocv_to_yoloimg(const cv::Mat& img, image& yolo_img)const
     }
 }
 
-void Yolo::readConfig(std::__cxx11::string filename){
+void Yolo::readConfig(std::string filename){
 
     cv::FileStorage file(filename, cv::FileStorage::READ);
-
     if (!file.isOpened()){
         std::cerr << "failed to open config file " << filename <<  std::endl;
         exit(0);
@@ -73,11 +74,11 @@ void Yolo::readConfig(std::__cxx11::string filename){
     std::cout << "nms " << nms << std::endl;
     std::cout << "nClass " << nClass << std::endl;
 
-//    //initialization
-//    names = (char**)std::malloc(nClass*sizeof(char *));
-//    for(int i = 0; i < nClass; i++){
-//        names[i] = (char*)std::malloc(15);
-//    }
+    //    //initialization
+    //    names = (char**)std::malloc(nClass*sizeof(char *));
+    //    for(int i = 0; i < nClass; i++){
+    //        names[i] = (char*)std::malloc(15);
+    //    }
 }
 
 void Yolo::loadConfig(){
@@ -133,11 +134,12 @@ void Yolo::detect(const cv::Mat& img, std::vector<DetectedObject>& detection)con
     cv::Mat img_local;
 
     try {
-
+        std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
         cv::cvtColor(img, img_local, cv::COLOR_BGR2RGB);
         ocv_to_yoloimg(img_local, im);
-
+        std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
         sized = resize_image(im, net.w, net.h);
+        std::chrono::steady_clock::time_point t3 = std::chrono::steady_clock::now();
 
         layer l = net.layers[net.n - 1];
         int output_size = l.w * l.h * l.n;
@@ -148,7 +150,12 @@ void Yolo::detect(const cv::Mat& img, std::vector<DetectedObject>& detection)con
             probs[i] = new float[l.classes + 1]();
 
         network_predict(net, sized.data);
+        std::chrono::steady_clock::time_point t4 = std::chrono::steady_clock::now();
 
+        std::cout << "  reshape duration: " << std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count() << std::endl
+                  << "  resize duration: " << std::chrono::duration_cast<std::chrono::duration<double> >(t3 - t2).count() << std::endl
+                  << "  prediction duration: " << std::chrono::duration_cast<std::chrono::duration<double> >(t4 - t3).count()
+                  << std::endl;
         get_region_boxes(l, 1, 1, thresh, probs, boxes, 0, 0, hier_thresh);
 
         if (l.softmax_tree && nms)

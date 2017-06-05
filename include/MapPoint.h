@@ -81,6 +81,8 @@ public:
     int PredictScale(const float &currentDist, KeyFrame*pKF);
     int PredictScale(const float &currentDist, Frame* pF);
 
+    void setLabelClass(const int &class_);
+
 public:
     long unsigned int mnId;
     static long unsigned int nNextId;
@@ -111,6 +113,9 @@ public:
 
 
     static std::mutex mGlobalMutex;
+
+    //class name
+    int mnObjectClass;
 
 protected:    
 

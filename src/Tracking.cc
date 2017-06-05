@@ -237,9 +237,24 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const d
 }
 
 
-cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
+cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp, const vector<DetectedObject> &detected)
 {
     mImGray = im;
+
+    //if object area over threshold obth, return last pose
+    float obth = 0.3;
+    int wholeArea = 0, objectArea = 0;
+    wholeArea = im.cols * im.rows;
+    std::cout << " detect " << detected.size() << " objects: " << "[class, prob, areaRatio]" << std::endl;
+    for(int i = 0; i < detected.size(); i++){
+        DetectedObject currO = detected[i];
+        objectArea += currO.bounding_box.area();
+        std::cout << "  [" << currO.object_class << ", " << currO.prob << ", " << float(currO.bounding_box.area())/float(wholeArea) << "] ";
+    }
+    std::cout << std::endl << "whole Area ratio: " << float(objectArea)/float(wholeArea) << endl;
+    if(objectArea/wholeArea > obth){
+        return mLastFrame.mTcw.clone();
+    }
 
     if(mImGray.channels()==3)
     {
@@ -257,9 +272,9 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
     }
 
     if(mState==NOT_INITIALIZED || mState==NO_IMAGES_YET)
-        mCurrentFrame = Frame(mImGray,timestamp,mpIniORBextractor,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
+        mCurrentFrame = Frame(mImGray,timestamp,mpIniORBextractor,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,detected);
     else
-        mCurrentFrame = Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
+        mCurrentFrame = Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,detected);
 
     Track();
 
@@ -667,6 +682,12 @@ void Tracking::CreateInitialMapMonocular()
         cv::Mat worldPos(mvIniP3D[i]);
 
         MapPoint* pMP = new MapPoint(worldPos,pKFcur,mpMap);
+
+        // set label to MapPoints
+        const cv::KeyPoint &kp2 = pKFcur->mvKeysUn[i];
+        if(kp2.class_id != -1){
+            pMP->setLabelClass(kp2.class_id);
+        }
 
         pKFini->AddMapPoint(pMP,i);
         pKFcur->AddMapPoint(pMP,mvIniMatches[i]);

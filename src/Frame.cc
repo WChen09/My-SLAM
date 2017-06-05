@@ -171,7 +171,7 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeSt
 }
 
 
-Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extractor,ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth)
+Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extractor,ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth, const std::vector<DetectedObject> &detected)
     :mpORBvocabulary(voc),mpORBextractorLeft(extractor),mpORBextractorRight(static_cast<ORBextractor*>(NULL)),
      mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth)
 {
@@ -189,6 +189,9 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
 
     // ORB extraction
     ExtractORB(0,imGray);
+
+    // Objects
+    mvObjects = detected;
 
     N = mvKeys.size();
 
@@ -225,6 +228,22 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
     mb = mbf/fx;
 
     AssignFeaturesToGrid();
+
+    addClassLabel2Feature();
+}
+
+void Frame::addClassLabel2Feature(){
+    for(int i = 0; i < mvKeys.size(); i++){
+//        cv::KeyPoint curKP = mvKeys[i];
+//        cv::KeyPoint curKPUn = mvKeysUn[i];
+        for(int j = 0; j < mvObjects.size(); j++){
+            DetectedObject curObjects = mvObjects[j];
+            if(curObjects.bounding_box.contains(mvKeys[i].pt))
+                mvKeys[i].class_id = curObjects.object_class;
+            if(curObjects.bounding_box.contains(mvKeysUn[i].pt))
+                mvKeysUn[i].class_id = curObjects.object_class;
+        }
+    }
 }
 
 void Frame::AssignFeaturesToGrid()

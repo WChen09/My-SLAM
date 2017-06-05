@@ -29,7 +29,7 @@
 #include<opencv2/features2d/features2d.hpp>
 
 #include<mutex>
-
+#include"Thirdparty/darknet/src/object.h"
 
 namespace ORB_SLAM2
 {
@@ -48,6 +48,8 @@ public:
     // Draw last processed frame.
     cv::Mat DrawFrame();
 
+    void loadObjectNames(vector<string> &names_);
+
 protected:
 
     void DrawTextInfo(cv::Mat &im, int nState, cv::Mat &imText);
@@ -62,6 +64,10 @@ protected:
     vector<cv::KeyPoint> mvIniKeys;
     vector<int> mvIniMatches;
     int mState;
+
+    vector<DetectedObject> mvCurrentObjects;
+    vector<string> names;
+    int mnlabeled, mnlabeledVO;
 
     Map* mpMap;
 

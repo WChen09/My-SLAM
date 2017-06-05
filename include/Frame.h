@@ -32,6 +32,8 @@
 
 #include <opencv2/opencv.hpp>
 
+#include "Thirdparty/darknet/src/object.h"
+
 namespace ORB_SLAM2
 {
 #define FRAME_GRID_ROWS 48
@@ -55,7 +57,7 @@ public:
     Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeStamp, ORBextractor* extractor,ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth);
 
     // Constructor for Monocular cameras.
-    Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extractor,ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth);
+    Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extractor,ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth, const std::vector<DetectedObject> &detected);
 
     // Extract ORB on the image. 0 for left image and 1 for right image.
     void ExtractORB(int flag, const cv::Mat &im);
@@ -131,6 +133,9 @@ public:
     // Number of KeyPoints.
     int N;
 
+    //vector of objects in this frame
+    std::vector<DetectedObject> mvObjects;
+
     // Vector of keypoints (original for visualization) and undistorted (actually used by the system).
     // In the stereo case, mvKeysUn is redundant as images must be rectified.
     // In the RGB-D case, RGB images can be distorted.
@@ -201,6 +206,7 @@ private:
     // Assign keypoints to the grid for speed up feature matching (called in the constructor).
     void AssignFeaturesToGrid();
 
+    void addClassLabel2Feature();
     // Rotation, translation and camera center
     cv::Mat mRcw;
     cv::Mat mtcw;

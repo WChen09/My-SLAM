@@ -27,21 +27,19 @@
 #include <iomanip>
 #include "unistd.h"
 
+#include <chrono>
 namespace ORB_SLAM2
 {
 
-System::System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor,
+System::System(const string &strVocFile, const string &strSettingsFile, const string &yoloSettingFile, const eSensor sensor,
                const bool bUseViewer):mSensor(sensor), mpViewer(static_cast<Viewer*>(NULL)), mbReset(false),mbActivateLocalizationMode(false),
         mbDeactivateLocalizationMode(false)
 {
-    // Output welcome message
-    cout << endl <<
-    "ORB-SLAM2 Copyright (C) 2014-2016 Raul Mur-Artal, University of Zaragoza." << endl <<
-    "This program comes with ABSOLUTELY NO WARRANTY;" << endl  <<
-    "This is free software, and you are welcome to redistribute it" << endl <<
-    "under certain conditions. See LICENSE.txt." << endl << endl;
+// ORB-SLAM2 Configuration
+    cout << "-------->>>>>>>>" << endl
+         << "ORB-SLAM2 Configuration" << endl;
 
-    cout << "Input sensor was set to: ";
+    cout << " Input sensor was set to: ";
 
     if(mSensor==MONOCULAR)
         cout << "Monocular" << endl;
@@ -54,23 +52,21 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     cv::FileStorage fsSettings(strSettingsFile.c_str(), cv::FileStorage::READ);
     if(!fsSettings.isOpened())
     {
-       cerr << "Failed to open settings file at: " << strSettingsFile << endl;
+       cerr << "ERROR: Failed to open settings file at: " << strSettingsFile << endl;
        exit(-1);
     }
-
-
     //Load ORB Vocabulary
-    cout << endl << "Loading ORB Vocabulary. This could take a while..." << endl;
+    cout << endl << " Loading ORB Vocabulary. This could take a while..." << endl;
 
     mpVocabulary = new ORBVocabulary();
     bool bVocLoad = mpVocabulary->loadFromTextFile(strVocFile);
     if(!bVocLoad)
     {
-        cerr << "Wrong path to vocabulary. " << endl;
-        cerr << "Falied to open at: " << strVocFile << endl;
+        cerr << "ERROR: Wrong path to vocabulary. " << endl;
+        cerr << "ERROR: Falied to open at: " << strVocFile << endl;
         exit(-1);
     }
-    cout << "Vocabulary loaded!" << endl << endl;
+    cout << " Vocabulary loaded!" << endl << endl;
 
     //Create KeyFrame Database
     mpKeyFrameDatabase = new KeyFrameDatabase(*mpVocabulary);
@@ -112,6 +108,18 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 
     mpLoopCloser->SetTracker(mpTracker);
     mpLoopCloser->SetLocalMapper(mpLocalMapper);
+
+// Darknet YOLO2 configuration
+    cout << endl << "-------->>>>>>>>" << endl
+         << "Darknet YOLO2 Configuration" << endl;
+
+    yolo = new Yolo();
+    yolo->readConfig(yoloSettingFile);
+    yolo->loadConfig();
+
+    names = yolo->get_labels_();
+
+    mpFrameDrawer->loadObjectNames(names);
 }
 
 cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp)
@@ -257,9 +265,15 @@ cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
         mbReset = false;
     }
     }
+    //detect object
+    std::cout << endl << " --------" << std::endl;
 
-    cv::Mat Tcw = mpTracker->GrabImageMonocular(im,timestamp);
+    std::cout << "New Frame" << std::endl;
+    std::cout << " detecting objects" << std::endl;
+    std::vector<DetectedObject> detected;
+    yolo->detect(im.clone(), detected);
 
+    cv::Mat Tcw = mpTracker->GrabImageMonocular(im, timestamp, detected);
     unique_lock<mutex> lock2(mMutexState);
     mTrackingState = mpTracker->mState;
     mTrackedMapPoints = mpTracker->mCurrentFrame.mvpMapPoints;

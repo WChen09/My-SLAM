@@ -25,7 +25,7 @@
 namespace ORB_SLAM2
 {
 
-Map::Map():mnMaxKFid(0),mnBigChangeIdx(0)
+Map::Map():mnMaxKFid(0),mnBigChangeIdx(0),mnLabeledMP(0)
 {
 }
 
@@ -41,13 +41,20 @@ void Map::AddMapPoint(MapPoint *pMP)
 {
     unique_lock<mutex> lock(mMutexMap);
     mspMapPoints.insert(pMP);
+    if(pMP->mnObjectClass > -1)
+    {
+        mnLabeledMP++;
+    }
 }
 
 void Map::EraseMapPoint(MapPoint *pMP)
 {
     unique_lock<mutex> lock(mMutexMap);
     mspMapPoints.erase(pMP);
-
+    if(pMP->mnObjectClass > -1)
+    {
+        mnLabeledMP--;
+    }
     // TODO: This only erase the pointer.
     // Delete the MapPoint
 }
@@ -128,6 +135,7 @@ void Map::clear()
     mnMaxKFid = 0;
     mvpReferenceMapPoints.clear();
     mvpKeyFrameOrigins.clear();
+    mnLabeledMP = 0;
 }
 
 } //namespace ORB_SLAM
