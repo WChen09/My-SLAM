@@ -65,6 +65,12 @@ int main(int argc, char **argv)
     cout << "Start processing sequence ..." << endl;
     cout << "Images in the sequence: " << nImages << endl << endl;
 
+    ofstream timeRecordfile("./timeRec.txt");
+    if(!timeRecordfile.is_open()){
+        cout << "ERROR: cannot record time for every frame" << endl;
+        exit(1);
+    }
+
     // Main loop
     cv::Mat im;
     for(int ni=0; ni<nImages; ni++)
@@ -96,18 +102,22 @@ int main(int argc, char **argv)
 
         double ttrack= std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count();
 
+        std::cout << "Tracking this frame costs: " << ttrack << "seconds" << endl;
         vTimesTrack[ni]=ttrack;
 
-        // Wait to load the next frame
-        double T=0;
-        if(ni<nImages-1)
-            T = vTimestamps[ni+1]-tframe;
-        else if(ni>0)
-            T = tframe-vTimestamps[ni-1];
+        timeRecordfile << ttrack << endl;
+//        // Wait to load the next frame
+//        double T=0;
+//        if(ni<nImages-1)
+//            T = vTimestamps[ni+1]-tframe;
+//        else if(ni>0)
+//            T = tframe-vTimestamps[ni-1];
 
-        if(ttrack<T)
-            usleep((T-ttrack)*1e6);
+//        if(ttrack<T)
+//            usleep((T-ttrack)*1e6);
     }
+
+    timeRecordfile.close();
 
     // Stop all threads
     SLAM.Shutdown();

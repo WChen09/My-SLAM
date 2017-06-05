@@ -68,6 +68,8 @@ public:
 
     int mnLabeledMP;
 
+    bool Save(const string &filename);
+
 protected:
     std::set<MapPoint*> mspMapPoints;
     std::set<KeyFrame*> mspKeyFrames;
@@ -80,6 +82,9 @@ protected:
     int mnBigChangeIdx;
 
     std::mutex mMutexMap;
+
+    void _WriteMapPoint(ofstream &f, MapPoint* mp);
+    void _WriteKeyFrame(ofstream &f, KeyFrame* kf, map<MapPoint*, unsigned long int>& idx_of_mp);
 
 };
 

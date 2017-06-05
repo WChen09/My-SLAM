@@ -21,7 +21,8 @@
 #include "Map.h"
 
 #include<mutex>
-
+#include <sys/stat.h>
+#include "Converter.h"
 namespace ORB_SLAM2
 {
 
@@ -136,6 +137,114 @@ void Map::clear()
     mvpReferenceMapPoints.clear();
     mvpKeyFrameOrigins.clear();
     mnLabeledMP = 0;
+}
+
+
+void Map::_WriteMapPoint(ofstream &f, MapPoint* mp) {
+    f.write((char*)&mp->mnId, sizeof(mp->mnId));               // id: long unsigned int
+    cv::Mat wp = mp->GetWorldPos();
+    f.write((char*)&wp.at<float>(0), sizeof(float));           // pos x: float
+    f.write((char*)&wp.at<float>(1), sizeof(float));           // pos y: float
+    f.write((char*)&wp.at<float>(2), sizeof(float));           // pos z: float
+}
+
+void Map::_WriteKeyFrame(ofstream &f, KeyFrame* kf, map<MapPoint*, unsigned long int>& idx_of_mp) {
+    f.write((char*)&kf->mnId, sizeof(kf->mnId));                 // id: long unsigned int
+    f.write((char*)&kf->mTimeStamp, sizeof(kf->mTimeStamp));     // ts: double
+
+#if 0
+    cerr << "writting keyframe id " << kf->mnId << " ts " << kf->mTimeStamp << " frameid " << kf->mnFrameId << " TrackReferenceForFrame " << kf->mnTrackReferenceForFrame << endl;
+    cerr << " parent " << kf->GetParent() << endl;
+    cerr << "children: ";
+    for(auto ch: kf->GetChilds())
+        cerr << " " << ch->mnId;
+    cerr <<endl;
+    cerr << kf->mnId << " connected: (" << kf->GetConnectedKeyFrames().size() << ") ";
+    for (auto ckf: kf->GetConnectedKeyFrames())
+        cerr << ckf->mnId << "," << kf->GetWeight(ckf) << " ";
+    cerr << endl;
+#endif
+
+    cv::Mat Tcw = kf->GetPose();
+    f.write((char*)&Tcw.at<float>(0,3), sizeof(float));          // px: float
+    f.write((char*)&Tcw.at<float>(1,3), sizeof(float));          // py: float
+    f.write((char*)&Tcw.at<float>(2,3), sizeof(float));          // pz: float
+    vector<float> Qcw = Converter::toQuaternion(Tcw.rowRange(0,3).colRange(0,3));
+    f.write((char*)&Qcw[0], sizeof(float));                      // qx: float
+    f.write((char*)&Qcw[1], sizeof(float));                      // qy: float
+    f.write((char*)&Qcw[2], sizeof(float));                      // qz: float
+    f.write((char*)&Qcw[3], sizeof(float));                      // qw: float
+    f.write((char*)&kf->N, sizeof(kf->N));                       // nb_features: int
+    for (int i=0; i<kf->N; i++) {
+        cv::KeyPoint kp = kf->mvKeys[i];
+        f.write((char*)&kp.pt.x,     sizeof(kp.pt.x));               // float
+        f.write((char*)&kp.pt.y,     sizeof(kp.pt.y));               // float
+        f.write((char*)&kp.size,     sizeof(kp.size));               // float
+        f.write((char*)&kp.angle,    sizeof(kp.angle));              // float
+        f.write((char*)&kp.response, sizeof(kp.response));           // float
+        f.write((char*)&kp.octave,   sizeof(kp.octave));             // int
+        for (int j=0; j<32; j++)
+            f.write((char*)&kf->mDescriptors.at<unsigned char>(i,j), sizeof(char));
+
+        unsigned long int mpidx; MapPoint* mp = kf->GetMapPoint(i);
+        if (mp == NULL) mpidx = ULONG_MAX;
+        else mpidx = idx_of_mp[mp];
+        f.write((char*)&mpidx,   sizeof(mpidx));                       // long int
+    }
+
+}
+bool Map::Save(const string &filename)
+{
+    ofstream SaveMapFile(filename.c_str(), ios_base::out|ios::binary);
+
+    cout << "  writing " << mspMapPoints.size() << " mappoints" << endl;
+    unsigned long int nbMapPoints = mspMapPoints.size();
+    SaveMapFile.write((char*)&nbMapPoints, sizeof(nbMapPoints));
+    for(auto mp: mspMapPoints)
+        _WriteMapPoint(SaveMapFile, mp);
+
+    map<MapPoint*, unsigned long int> idx_of_mp;
+    unsigned long int i = 0;
+    for(auto mp: mspMapPoints) {
+        idx_of_mp[mp] = i;
+        i += 1;
+    }
+
+    cout << "  writing " << mspKeyFrames.size() << " keyframes" << endl;
+    unsigned long int nbKeyFrames = mspKeyFrames.size();
+    SaveMapFile.write((char*)&nbKeyFrames, sizeof(nbKeyFrames));
+    for(auto kf: mspKeyFrames)
+        _WriteKeyFrame(SaveMapFile, kf, idx_of_mp);
+
+    // store tree and graph
+    for(auto kf: mspKeyFrames) {
+        KeyFrame* parent = kf->GetParent();
+        unsigned long int parent_id = ULONG_MAX;
+        if (parent) parent_id = parent->mnId;
+        SaveMapFile.write((char*)&parent_id, sizeof(parent_id));
+        unsigned long int nb_con = kf->GetConnectedKeyFrames().size();
+        SaveMapFile.write((char*)&nb_con, sizeof(nb_con));
+        for (auto ckf: kf->GetConnectedKeyFrames()) {
+            int weight = kf->GetWeight(ckf);
+            SaveMapFile.write((char*)&ckf->mnId, sizeof(ckf->mnId));
+            SaveMapFile.write((char*)&weight, sizeof(weight));
+        }
+    }
+
+    SaveMapFile.close();
+    cout << "Map: finished saving" << endl;
+    struct stat st;
+    stat(filename.c_str(), &st);
+    cout << "Map: saved " << st.st_size << " bytes" << endl;
+
+#if 0
+    for(auto mp: mspMapPoints)
+        if (!(mp->mnId%100))
+            cerr << "mp " << mp->mnId << " " << mp->Observations() << " " << mp->isBad() << endl;
+#endif
+
+    return true;
+
 }
 
 } //namespace ORB_SLAM
