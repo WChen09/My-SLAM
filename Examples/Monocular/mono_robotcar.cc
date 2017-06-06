@@ -106,22 +106,28 @@ int main(int argc, char **argv)
         vTimesTrack[ni]=ttrack;
 
         timeRecordfile << ttrack << endl;
-//        // Wait to load the next frame
-//        double T=0;
-//        if(ni<nImages-1)
-//            T = vTimestamps[ni+1]-tframe;
-//        else if(ni>0)
-//            T = tframe-vTimestamps[ni-1];
+        // Wait to load the next frame
+        double T=0;
+        if(ni<nImages-1)
+            T = vTimestamps[ni+1]-tframe;
+        else if(ni>0)
+            T = tframe-vTimestamps[ni-1];
 
-//        if(ttrack<T)
-//            usleep((T-ttrack)*1e6);
+        if(ttrack<T)
+            usleep((T-ttrack)*1e6);
     }
 
     timeRecordfile.close();
 
     // Stop all threads
     SLAM.Shutdown();
-
+    //saving map
+    std::cout << "Saving Map" << std::endl;
+    const string path = SLAM.GetMapPath();
+    if(path.compare("Localization") != 0){
+        SLAM.SaveMap(path);
+        std::cout << "Map saving done!"<< std::endl;
+    }
     // Tracking time statistics
     sort(vTimesTrack.begin(),vTimesTrack.end());
     float totaltime = 0;

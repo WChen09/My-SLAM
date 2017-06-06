@@ -117,14 +117,17 @@ public:
     void SaveTrajectoryKITTI(const string &filename);
 
     // TODO: Save/Load functions
-     bool SaveMap(const string &filename);
-     bool LoadMap(const string &filename);
+    bool SaveMap(const string &filename);
+    bool LoadMap(const string &filename, ORBVocabulary &voc, const string &settingfile);
+    const string GetMapPath();
 
     // Information from most recent processed frame
     // You can call this right after TrackMonocular (or stereo or RGBD)
     int GetTrackingState();
     std::vector<MapPoint*> GetTrackedMapPoints();
     std::vector<cv::KeyPoint> GetTrackedKeyPointsUn();
+
+    int SLAM;
 
 private:
 
@@ -184,6 +187,8 @@ private:
 
     //object names
     std::vector<string> names;
+
+    string MapPath;
 };
 
 }// namespace ORB_SLAM

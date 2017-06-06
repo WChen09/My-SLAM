@@ -50,6 +50,15 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
     mpKeyFrameDB(pKFDB), mpInitializer(static_cast<Initializer*>(NULL)), mpSystem(pSys), mpViewer(NULL),
     mpFrameDrawer(pFrameDrawer), mpMapDrawer(pMapDrawer), mpMap(pMap), mnLastRelocFrameId(0)
 {
+    if(pMap->KeyFramesInMap() == 0)
+        mState = NO_IMAGES_YET;
+    else{
+        mState = LOST;
+        mbOnlyTracking = true;
+        std::vector<KeyFrame*> akf = pMap->GetAllKeyFrames();
+        mpReferenceKF = *akf.end();
+        mlRelativeFramePoses.push_back(cv::Mat::eye(4,4,CV_32FC1));
+    }
     // Load camera parameters from settings file
 
     cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
@@ -343,6 +352,7 @@ void Tracking::Track()
         else
         {
             // Localization Mode: Local Mapping is deactivated
+            std::cout << "Localization Mode" << std::endl;
 
             if(mState==LOST)
             {
@@ -1370,11 +1380,9 @@ bool Tracking::Relocalization()
 {
     // Compute Bag of Words Vector
     mCurrentFrame.ComputeBoW();
-
     // Relocalization is performed when tracking is lost
     // Track Lost: Query KeyFrame Database for keyframe candidates for relocalisation
     vector<KeyFrame*> vpCandidateKFs = mpKeyFrameDB->DetectRelocalizationCandidates(&mCurrentFrame);
-
     if(vpCandidateKFs.empty())
         return false;
 
@@ -1392,7 +1400,7 @@ bool Tracking::Relocalization()
 
     vector<bool> vbDiscarded;
     vbDiscarded.resize(nKFs);
-
+    std::cout << "into Relocalization 2" << std::endl;
     int nCandidates=0;
 
     for(int i=0; i<nKFs; i++)
@@ -1408,6 +1416,7 @@ bool Tracking::Relocalization()
                 vbDiscarded[i] = true;
                 continue;
             }
+
             else
             {
                 PnPsolver* pSolver = new PnPsolver(mCurrentFrame,vvpMapPointMatches[i]);
@@ -1415,9 +1424,10 @@ bool Tracking::Relocalization()
                 vpPnPsolvers[i] = pSolver;
                 nCandidates++;
             }
+
         }
     }
-
+    std::cout << "into Relocalization 3" << std::endl;
     // Alternatively perform some iterations of P4P RANSAC
     // Until we found a camera pose supported by enough inliers
     bool bMatch = false;
@@ -1524,6 +1534,7 @@ bool Tracking::Relocalization()
     else
     {
         mnLastRelocFrameId = mCurrentFrame.mnId;
+        cout << "localization done!" << endl;
         return true;
     }
 

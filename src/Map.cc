@@ -247,4 +247,186 @@ bool Map::Save(const string &filename)
 
 }
 
+KeyFrame* Map::_ReadKeyFrame(ifstream &f, ORBVocabulary &voc, std::vector<MapPoint*> amp, ORBextractor* orb_ext)
+{
+    Frame fr;
+    fr.SetCameraParameters(mK, mDistCoef);
+    fr.mpORBvocabulary = &voc;
+    f.read((char*)&fr.mnId, sizeof(fr.mnId));              // ID
+    //cerr << " reading keyfrane id " << fr.mnId << endl;
+    f.read((char*)&fr.mTimeStamp, sizeof(fr.mTimeStamp));  // timestamp
+    cv::Mat Tcw(4,4,CV_32F);                               // position
+    f.read((char*)&Tcw.at<float>(0, 3), sizeof(float));
+    f.read((char*)&Tcw.at<float>(1, 3), sizeof(float));
+    f.read((char*)&Tcw.at<float>(2, 3), sizeof(float));
+    Tcw.at<float>(3,3) = 1.;
+    cv::Mat Qcw(1,4, CV_32F);                             // orientation
+    f.read((char*)&Qcw.at<float>(0, 0), sizeof(float));
+    f.read((char*)&Qcw.at<float>(0, 1), sizeof(float));
+    f.read((char*)&Qcw.at<float>(0, 2), sizeof(float));
+    f.read((char*)&Qcw.at<float>(0, 3), sizeof(float));
+    Converter::RmatOfQuat(Tcw, Qcw);
+    fr.SetPose(Tcw);
+    f.read((char*)&fr.N, sizeof(fr.N));                    // nb keypoints
+    fr.mvKeys.reserve(fr.N);
+    fr.mDescriptors.create(fr.N, 32, CV_8UC1);
+    fr.mvpMapPoints = vector<MapPoint*>(fr.N,static_cast<MapPoint*>(NULL));
+    for (int i=0; i<fr.N; i++) {
+        cv::KeyPoint kp;
+        f.read((char*)&kp.pt.x,     sizeof(kp.pt.x));
+        f.read((char*)&kp.pt.y,     sizeof(kp.pt.y));
+        f.read((char*)&kp.size,     sizeof(kp.size));
+        f.read((char*)&kp.angle,    sizeof(kp.angle));
+        f.read((char*)&kp.response, sizeof(kp.response));
+        f.read((char*)&kp.octave,   sizeof(kp.octave));
+        fr.mvKeys.push_back(kp);
+        for (int j=0; j<32; j++)
+            f.read((char*)&fr.mDescriptors.at<unsigned char>(i, j), sizeof(char));
+        unsigned long int mpidx;
+        f.read((char*)&mpidx,   sizeof(mpidx));
+        if (mpidx == ULONG_MAX)	fr.mvpMapPoints[i] = NULL;
+        else fr.mvpMapPoints[i] = amp[mpidx];
+    }
+    // mono only for now
+    fr.mvuRight = vector<float>(fr.N,-1);
+    fr.mvDepth = vector<float>(fr.N,-1);
+    fr.mpORBextractorLeft = orb_ext;
+    fr.InitializeScaleLevels();
+    fr.UndistortKeyPoints();
+    fr.AssignFeaturesToGrid();
+    fr.ComputeBoW();
+
+    KeyFrame* kf = new KeyFrame(fr, this, NULL);
+    kf->mnId = fr.mnId; // bleeee why? do I store that?
+    for (int i=0; i<fr.N; i++) {
+        if (fr.mvpMapPoints[i]) {
+            fr.mvpMapPoints[i]->AddObservation(kf, i);
+            if (!fr.mvpMapPoints[i]->GetReferenceKeyFrame()) fr.mvpMapPoints[i]->SetReferenceKeyFrame(kf);
+        }
+    }
+
+    return kf;
+}
+
+MapPoint* Map::_ReadMapPoint(ifstream &f) {
+    long unsigned int id;
+    f.read((char*)&id, sizeof(id));              // ID
+    cv::Mat wp(3,1, CV_32F);
+    f.read((char*)&wp.at<float>(0), sizeof(float));
+    f.read((char*)&wp.at<float>(1), sizeof(float));
+    f.read((char*)&wp.at<float>(2), sizeof(float));
+    long int mnFirstKFid=0, mnFirstFrame=0;
+    MapPoint* mp = new MapPoint(wp, mnFirstKFid, mnFirstFrame, this);
+    mp->mnId = id;
+    return mp;
+}
+
+
+bool Map::Load(const string &filename, ORBVocabulary &voc, const string &settingFile)
+{
+    // Load ORB parameters and camera parameters
+    cv::FileStorage fSettings(settingFile, cv::FileStorage::READ);
+    int nFeatures = fSettings["ORBextractor.nFeatures"];
+    float fScaleFactor = fSettings["ORBextractor.scaleFactor"];
+    int nLevels = fSettings["ORBextractor.nLevels"];
+    int fIniThFAST = fSettings["ORBextractor.iniThFAST"];
+    int fMinThFAST = fSettings["ORBextractor.minThFAST"];
+
+    float fx = fSettings["Camera.fx"];
+    float fy = fSettings["Camera.fy"];
+    float cx = fSettings["Camera.cx"];
+    float cy = fSettings["Camera.cy"];
+
+    cv::Mat K = cv::Mat::eye(3,3,CV_32F);
+    K.at<float>(0,0) = fx;
+    K.at<float>(1,1) = fy;
+    K.at<float>(0,2) = cx;
+    K.at<float>(1,2) = cy;
+    K.copyTo(mK);
+
+    cv::Mat DistCoef(4,1,CV_32F);
+    DistCoef.at<float>(0) = fSettings["Camera.k1"];
+    DistCoef.at<float>(1) = fSettings["Camera.k2"];
+    DistCoef.at<float>(2) = fSettings["Camera.p1"];
+    DistCoef.at<float>(3) = fSettings["Camera.p2"];
+    const float k3 = fSettings["Camera.k3"];
+    if(k3!=0)
+    {
+        DistCoef.resize(5);
+        DistCoef.at<float>(4) = k3;
+    }
+    DistCoef.copyTo(mDistCoef);
+
+    ORB_SLAM2::ORBextractor orb_ext = ORB_SLAM2::ORBextractor(nFeatures, fScaleFactor, nLevels, fIniThFAST, fMinThFAST);
+    fSettings.release();
+
+    cerr << "Map: reading from " << filename << endl;
+    ifstream f;
+    f.open(filename.c_str());
+
+    long unsigned int nb_mappoints, max_id=0;
+    f.read((char*)&nb_mappoints, sizeof(nb_mappoints));
+    cerr << "reading " << nb_mappoints << " mappoints" << endl;
+    for (unsigned int i=0; i<nb_mappoints; i++) {
+        ORB_SLAM2::MapPoint* mp = _ReadMapPoint(f);
+        if (mp->mnId>=max_id) max_id=mp->mnId;
+        AddMapPoint(mp);
+    }
+    ORB_SLAM2::MapPoint::nNextId = max_id+1; // that is probably wrong if last mappoint is not here :(
+
+    std::vector<MapPoint*> amp = GetAllMapPoints();
+    long unsigned int nb_keyframes;
+    f.read((char*)&nb_keyframes, sizeof(nb_keyframes));
+    cerr << "reading " << nb_keyframes << " keyframe" << endl;
+    vector<KeyFrame*> kf_by_order;
+    for (unsigned int i=0; i<nb_keyframes; i++) {
+        KeyFrame* kf = _ReadKeyFrame(f, voc, amp, &orb_ext);
+        AddKeyFrame(kf);
+        kf_by_order.push_back(kf);
+    }
+
+    // Load Spanning tree
+    map<unsigned long int, KeyFrame*> kf_by_id;
+    for(auto kf: mspKeyFrames)
+        kf_by_id[kf->mnId] = kf;
+
+    for(auto kf: kf_by_order) {
+        unsigned long int parent_id;
+        f.read((char*)&parent_id, sizeof(parent_id));          // parent id
+        if (parent_id != ULONG_MAX)
+            kf->ChangeParent(kf_by_id[parent_id]);
+        unsigned long int nb_con;                             // number connected keyframe
+        f.read((char*)&nb_con, sizeof(nb_con));
+        for (unsigned long int i=0; i<nb_con; i++) {
+            unsigned long int id; int weight;
+            f.read((char*)&id, sizeof(id));                   // connected keyframe
+            f.read((char*)&weight, sizeof(weight));           // connection weight
+            kf->AddConnection(kf_by_id[id], weight);
+        }
+    }
+    // MapPoints descriptors
+    for(auto mp: amp) {
+        mp->ComputeDistinctiveDescriptors();
+        mp->UpdateNormalAndDepth();
+    }
+
+#if 0
+    for(auto mp: mspMapPoints)
+        if (!(mp->mnId%100))
+            cerr << "mp " << mp->mnId << " " << mp->Observations() << " " << mp->isBad() << endl;
+#endif
+
+#if 0
+    for(auto kf: kf_by_order) {
+        cerr << "loaded keyframe id " << kf->mnId << " ts " << kf->mTimeStamp << " frameid " << kf->mnFrameId << " TrackReferenceForFrame " << kf->mnTrackReferenceForFrame << endl;
+        cerr << " parent " << kf->GetParent() << endl;
+        cerr << "children: ";
+        for(auto ch: kf->GetChilds())
+            cerr << " " << ch;
+        cerr <<endl;
+    }
+#endif
+    return true;
+}
+
 } //namespace ORB_SLAM

@@ -55,10 +55,12 @@ System::System(const string &strVocFile, const string &strSettingsFile, const st
        cerr << "ERROR: Failed to open settings file at: " << strSettingsFile << endl;
        exit(-1);
     }
+
     //Load ORB Vocabulary
     cout << endl << " Loading ORB Vocabulary. This could take a while..." << endl;
 
     mpVocabulary = new ORBVocabulary();
+
     bool bVocLoad = mpVocabulary->loadFromTextFile(strVocFile);
     if(!bVocLoad)
     {
@@ -67,12 +69,33 @@ System::System(const string &strVocFile, const string &strSettingsFile, const st
         exit(-1);
     }
     cout << " Vocabulary loaded!" << endl << endl;
+    //Create the Map
+
+    mpMap = new Map();
+    SLAM = fsSettings["SLAM"];
+    bool MapLoaded = false;
+    fsSettings["MapPath"] >> MapPath;
+    if(SLAM != 1){
+        std::cout << std::endl << "Choose Localization mode" << std::endl;
+        MapLoaded = LoadMap(MapPath, *mpVocabulary, strSettingsFile);
+    }
+    else{
+        std::cout << std::endl << "Choose SLAM mode" << std::endl;
+    }
 
     //Create KeyFrame Database
     mpKeyFrameDatabase = new KeyFrameDatabase(*mpVocabulary);
 
-    //Create the Map
-    mpMap = new Map();
+    //load map to Database
+    int count = 0;
+    if(MapLoaded){
+        vector<KeyFrame*> AllKFs =  mpMap->GetAllKeyFrames();
+        for(auto iter = AllKFs.cbegin(); iter != AllKFs.cend(); iter++ ){
+            count++;
+            mpKeyFrameDatabase->add(*iter);
+        }
+    }
+    cout << "add to Database " << count << endl;
 
     //Create Drawers. These are used by the Viewer
     mpFrameDrawer = new FrameDrawer(mpMap);
@@ -108,6 +131,9 @@ System::System(const string &strVocFile, const string &strSettingsFile, const st
 
     mpLoopCloser->SetTracker(mpTracker);
     mpLoopCloser->SetLocalMapper(mpLocalMapper);
+
+    if(SLAM != 1)
+        ActivateLocalizationMode();
 
 // Darknet YOLO2 configuration
     cout << endl << "-------->>>>>>>>" << endl
@@ -272,7 +298,7 @@ cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
     std::cout << " detecting objects" << std::endl;
     std::vector<DetectedObject> detected;
     yolo->detect(im.clone(), detected);
-
+    std::cout << " detect done" << std::endl;
     cv::Mat Tcw = mpTracker->GrabImageMonocular(im, timestamp, detected);
     unique_lock<mutex> lock2(mMutexState);
     mTrackingState = mpTracker->mState;
@@ -511,4 +537,20 @@ bool System::SaveMap(const string &filename)
     return mpMap->Save(filename);
 }
 
+bool System::LoadMap(const string &filename, ORBVocabulary &voc, const string &settingfile)
+{
+    cout << endl << "--->>>" << endl;
+    cout << "System is loading map from " << filename << endl
+         << "Config file: " << settingfile << endl;
+    return mpMap->Load(filename, voc, settingfile);
+}
+
+const string System::GetMapPath()
+{
+    if(SLAM == 1){
+        return MapPath;
+    }
+    return "Localization";
+
+}
 } //namespace ORB_SLAM

@@ -69,6 +69,7 @@ public:
     int mnLabeledMP;
 
     bool Save(const string &filename);
+    bool Load(const string &filename, ORBVocabulary &voc, const string &settingFile);
 
 protected:
     std::set<MapPoint*> mspMapPoints;
@@ -85,7 +86,11 @@ protected:
 
     void _WriteMapPoint(ofstream &f, MapPoint* mp);
     void _WriteKeyFrame(ofstream &f, KeyFrame* kf, map<MapPoint*, unsigned long int>& idx_of_mp);
+    MapPoint*_ReadMapPoint(ifstream &f);
+    KeyFrame* _ReadKeyFrame(ifstream &f, ORBVocabulary &voc, std::vector<MapPoint*> amp, ORBextractor* orb_ext);
 
+    cv::Mat mK;
+    cv::Mat mDistCoef;
 };
 
 } //namespace ORB_SLAM

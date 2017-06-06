@@ -100,6 +100,21 @@ public:
     // Backprojects a keypoint (if stereo/depth info available) into 3D world coordinates.
     cv::Mat UnprojectStereo(const int &i);
 
+    void InitializeScaleLevels();
+
+    // Undistort keypoints given OpenCV distortion parameters.
+    // Only for the RGB-D case. Stereo must be already rectified!
+    // (called in the constructor).
+    void UndistortKeyPoints();
+
+    // Computes image bounds for the undistorted image (called in the constructor).
+    void ComputeImageBounds(const cv::Mat &imLeft);
+
+    // Assign keypoints to the grid for speed up feature matching (called in the constructor).
+    void AssignFeaturesToGrid();
+
+    void SetCameraParameters(cv::Mat &K, cv::Mat &DistCoef);
+
 public:
     // Vocabulary used for relocalization.
     ORBVocabulary* mpORBvocabulary;
@@ -195,16 +210,7 @@ public:
 
 private:
 
-    // Undistort keypoints given OpenCV distortion parameters.
-    // Only for the RGB-D case. Stereo must be already rectified!
-    // (called in the constructor).
-    void UndistortKeyPoints();
 
-    // Computes image bounds for the undistorted image (called in the constructor).
-    void ComputeImageBounds(const cv::Mat &imLeft);
-
-    // Assign keypoints to the grid for speed up feature matching (called in the constructor).
-    void AssignFeaturesToGrid();
 
     void addClassLabel2Feature();
     // Rotation, translation and camera center

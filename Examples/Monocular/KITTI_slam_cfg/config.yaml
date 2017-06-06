@@ -55,3 +55,13 @@ Viewer.ViewpointY: -10
 Viewer.ViewpointZ: -0.1
 Viewer.ViewpointF: 2000
 
+# SLAM 1 or Localization ONLY 0
+SLAM: 0
+MapPath: "./map.bin"
+
+
+
+
+
+
+
