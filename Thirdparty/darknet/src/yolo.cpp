@@ -135,7 +135,12 @@ void Yolo::detect(const cv::Mat& img, std::vector<DetectedObject>& detection)con
 
     try {
         std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
-        cv::cvtColor(img, img_local, cv::COLOR_BGR2RGB);
+        if(img.channels() == 1){
+            cv::cvtColor(img,img_local,CV_GRAY2RGB);
+        }
+        else{
+            cv::cvtColor(img, img_local, cv::COLOR_BGR2RGB);
+        }
         ocv_to_yoloimg(img_local, im);
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
         sized = resize_image(im, net.w, net.h);
