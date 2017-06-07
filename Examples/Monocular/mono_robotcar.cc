@@ -121,10 +121,11 @@ int main(int argc, char **argv)
 
     // Stop all threads
     SLAM.Shutdown();
+
     //saving map
-    std::cout << "Saving Map" << std::endl;
     const string path = SLAM.GetMapPath();
     if(path.compare("Localization") != 0){
+        std::cout << "Saving Map" << std::endl;
         SLAM.SaveMap(path);
         std::cout << "Map saving done!"<< std::endl;
     }
@@ -140,7 +141,7 @@ int main(int argc, char **argv)
     cout << "mean tracking time: " << totaltime/nImages << endl;
 
     // Save camera trajectory
-    SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
+    SLAM.SaveTrajectoryKITTI("KeyFrameTrajectory.txt");
 
     return 0;
 }
