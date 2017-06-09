@@ -1352,7 +1352,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
     {
         MapPoint* pMP = LastFrame.mvpMapPoints[i];
 
-        if(pMP)
+        if(pMP && pMP->mnObjectClass == -1)
         {
             if(!LastFrame.mvbOutlier[i])
             {

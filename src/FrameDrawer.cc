@@ -153,7 +153,7 @@ cv::Mat FrameDrawer::DrawFrame()
             char str[255];
             //sprintf(str,"%s %f", names[o.object_class], o.prob);
             sprintf(str,"%s %%%.2f", class_name.c_str(), o.prob);
-            cv::putText(im, str, cv::Point2f(o.bounding_box.x,o.bounding_box.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0,255,0), 1);
+            cv::putText(im, str, cv::Point2f(o.bounding_box.x,o.bounding_box.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,0,255), 1);
         }
     }
 

@@ -26,7 +26,7 @@ Camera.RGB: 1
 #--------------------------------------------------------------------------------------------
 
 # ORB Extractor: Number of features per image
-ORBextractor.nFeatures: 2000
+ORBextractor.nFeatures: 2500
 
 # ORB Extractor: Scale factor between levels in the scale pyramid 	
 ORBextractor.scaleFactor: 1.2
@@ -39,7 +39,7 @@ ORBextractor.nLevels: 8
 # Firstly we impose iniThFAST. If no corners are detected we impose a lower value minThFAST
 # You can lower these values if your images have low contrast			
 ORBextractor.iniThFAST: 20
-ORBextractor.minThFAST: 7
+ORBextractor.minThFAST: 2
 
 #--------------------------------------------------------------------------------------------
 # Viewer Parameters
@@ -54,4 +54,9 @@ Viewer.ViewpointX: 0
 Viewer.ViewpointY: -10
 Viewer.ViewpointZ: -0.1
 Viewer.ViewpointF: 2000
+
+
+# SLAM 1 or Localization ONLY 0
+SLAM: 1
+MapPath: "./map_robotcar.bin"
 

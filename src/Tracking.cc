@@ -261,9 +261,9 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp,
         std::cout << "  [" << currO.object_class << ", " << currO.prob << ", " << float(currO.bounding_box.area())/float(wholeArea) << "] ";
     }
     std::cout << std::endl << "whole Area ratio: " << float(objectArea)/float(wholeArea) << endl;
-    if(objectArea/wholeArea > obth){
-        return mLastFrame.mTcw.clone();
-    }
+//    if(objectArea/wholeArea > obth){
+//        return mLastFrame.mTcw.clone();
+//    }
 
     if(mImGray.channels()==3)
     {
@@ -922,7 +922,7 @@ bool Tracking::TrackWithMotionModel()
     if(mSensor!=System::STEREO)
         th=15;
     else
-        th=12;//change from 7 to 12
+        th=15;//change from 7 to 15
     int nmatches = matcher.SearchByProjection(mCurrentFrame,mLastFrame,th,mSensor==System::MONOCULAR);
     // If few matches, uses a wider window search
     if(nmatches<20)
@@ -1005,7 +1005,7 @@ bool Tracking::TrackLocalMap()
     if(mCurrentFrame.mnId<mnLastRelocFrameId+mMaxFrames && mnMatchesInliers<50)
         return false;
 
-    if(mnMatchesInliers<30)
+    if(mnMatchesInliers<20)
         return false;
     else
         return true;
@@ -1232,12 +1232,15 @@ void Tracking::SearchLocalPoints()
 
 void Tracking::UpdateLocalMap()
 {
-    // This is for visualization
-    mpMap->SetReferenceMapPoints(mvpLocalMapPoints);
 
     // Update
     UpdateLocalKeyFrames();
     UpdateLocalPoints();
+
+    // This is for visualization
+    mpMap->SetReferenceMapPoints(mvpLocalMapPoints);
+
+
 }
 
 void Tracking::UpdateLocalPoints()
@@ -1255,6 +1258,9 @@ void Tracking::UpdateLocalPoints()
             if(!pMP)
                 continue;
             if(pMP->mnTrackReferenceForFrame==mCurrentFrame.mnId)
+                continue;
+            //culling labeled MPs
+            if(pMP->mnObjectClass != -1)
                 continue;
             if(!pMP->isBad())
             {
@@ -1400,7 +1406,6 @@ bool Tracking::Relocalization()
 
     vector<bool> vbDiscarded;
     vbDiscarded.resize(nKFs);
-    std::cout << "into Relocalization 2" << std::endl;
     int nCandidates=0;
 
     for(int i=0; i<nKFs; i++)
@@ -1427,7 +1432,6 @@ bool Tracking::Relocalization()
 
         }
     }
-    std::cout << "into Relocalization 3" << std::endl;
     // Alternatively perform some iterations of P4P RANSAC
     // Until we found a camera pose supported by enough inliers
     bool bMatch = false;

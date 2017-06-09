@@ -78,7 +78,6 @@ int main(int argc, char **argv)
         // Read image from file
         im = cv::imread(vstrImageFilenames[ni],CV_LOAD_IMAGE_UNCHANGED);
         double tframe = vTimestamps[ni];
-
         if(im.empty())
         {
             cerr << endl << "Failed to load image at: " << vstrImageFilenames[ni] << endl;
