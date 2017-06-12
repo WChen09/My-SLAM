@@ -117,6 +117,10 @@ add_executable(mono_robotcar
 Examples/Monocular/mono_robotcar.cc)
 target_link_libraries(mono_robotcar ${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/Thirdparty/darknet/lib/libdarknet.so)
 
+add_executable(ORB_TEST
+Examples/Monocular/ORB_TEST.cc)
+target_link_libraries(ORB_TEST ${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/Thirdparty/darknet/lib/libdarknet.so)
+
 #add_executable(mono_euroc
 #Examples/Monocular/mono_euroc.cc)
 #target_link_libraries(mono_euroc ${PROJECT_NAME})

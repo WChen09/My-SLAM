@@ -455,11 +455,11 @@ ORBextractor::ORBextractor(int _nfeatures, float _scaleFactor, int _nlevels,
     // pre-compute the end of a row in a circular patch
     umax.resize(HALF_PATCH_SIZE + 1);
 
-    int v, v0, vmax = cvFloor(HALF_PATCH_SIZE * sqrt(2.f) / 2 + 1);
-    int vmin = cvCeil(HALF_PATCH_SIZE * sqrt(2.f) / 2);
-    const double hp2 = HALF_PATCH_SIZE*HALF_PATCH_SIZE;
+    int v, v0, vmax = cvFloor(HALF_PATCH_SIZE * sqrt(2.f) / 2 + 1);//11
+    int vmin = cvCeil(HALF_PATCH_SIZE * sqrt(2.f) / 2);//11
+    const double hp2 = HALF_PATCH_SIZE*HALF_PATCH_SIZE;//15^2
     for (v = 0; v <= vmax; ++v)
-        umax[v] = cvRound(sqrt(hp2 - v * v));
+        umax[v] = cvRound(sqrt(hp2 - v * v));//15, 15, 15, 15, 14, 14, 14, 13, 13, 12, 11, 10
 
     // Make sure we are symmetric
     for (v = HALF_PATCH_SIZE, v0 = 0; v >= vmin; --v)
@@ -1106,6 +1106,78 @@ void ORBextractor::operator()( InputArray _image, InputArray _mask, vector<KeyPo
     }
 }
 
+void ORBextractor::operator ()(InputArray _image, InputArray _mask, vector<KeyPoint>& _keypoints,
+                               OutputArray _descriptors, std::vector<DetectedObject> objects)
+{
+
+    if(_image.empty())
+        return;
+
+    Mat image = _image.getMat();
+    assert(image.type() == CV_8UC1 );
+
+    // Pre-compute the scale pyramid
+    ComputePyramid(image);
+
+    std::vector<std::vector<DetectedObject>> objectPyramid;
+    objectPyramid.reserve(nlevels);
+    ComputeObjectPyramid(objects, objectPyramid);
+
+    showObjectInPyramid(objectPyramid);
+
+    vector < vector<KeyPoint> > allKeypoints;
+    ComputeKeyPointsOctTreeObject(allKeypoints, objectPyramid);
+//    ComputeKeyPointsOctTree(allKeypoints);
+    //ComputeKeyPointsOld(allKeypoints);
+
+    Mat descriptors;
+
+    int nkeypoints = 0;
+    for (int level = 0; level < nlevels; ++level)
+        nkeypoints += (int)allKeypoints[level].size();
+    if( nkeypoints == 0 )
+        _descriptors.release();
+    else
+    {
+        _descriptors.create(nkeypoints, 32, CV_8U);
+        descriptors = _descriptors.getMat();
+    }
+
+    _keypoints.clear();
+    _keypoints.reserve(nkeypoints);
+
+    int offset = 0;
+    for (int level = 0; level < nlevels; ++level)
+    {
+        vector<KeyPoint>& keypoints = allKeypoints[level];
+        int nkeypointsLevel = (int)keypoints.size();
+
+        if(nkeypointsLevel==0)
+            continue;
+
+        // preprocess the resized image
+        Mat workingMat = mvImagePyramid[level].clone();
+        GaussianBlur(workingMat, workingMat, Size(7, 7), 2, 2, BORDER_REFLECT_101);
+
+        // Compute the descriptors
+        Mat desc = descriptors.rowRange(offset, offset + nkeypointsLevel);
+        computeDescriptors(workingMat, keypoints, desc, pattern);
+
+        offset += nkeypointsLevel;
+
+        // Scale keypoint coordinates
+        if (level != 0)
+        {
+            float scale = mvScaleFactor[level]; //getScale(level, firstLevel, scaleFactor);
+            for (vector<KeyPoint>::iterator keypoint = keypoints.begin(),
+                 keypointEnd = keypoints.end(); keypoint != keypointEnd; ++keypoint)
+                keypoint->pt *= scale;
+        }
+        // And add the keypoints to the output
+        _keypoints.insert(_keypoints.end(), keypoints.begin(), keypoints.end());
+    }
+}
+
 void ORBextractor::ComputePyramid(cv::Mat image)
 {
     for (int level = 0; level < nlevels; ++level)
@@ -1132,8 +1204,216 @@ void ORBextractor::ComputePyramid(cv::Mat image)
             copyMakeBorder(image, temp, EDGE_THRESHOLD, EDGE_THRESHOLD, EDGE_THRESHOLD, EDGE_THRESHOLD,
                            BORDER_REFLECT_101);            
         }
+//        stringstream ss;
+//        string s;
+//        ss << "level ";
+//        ss << level;
+//        ss >> s;
+//        cv::namedWindow(s);
+//        cv::imshow(s, mvImagePyramid[level]);
+//        cv::waitKey(1);
     }
 
 }
+
+void ORBextractor::ComputeObjectPyramid(std::vector<DetectedObject> objects, std::vector<std::vector<DetectedObject>> &objectPyramid_)
+{
+    int n = objects.size();
+    for(int level = 0; level < nlevels; level++)
+    {
+        std::vector<DetectedObject> ilevelObjects;
+        ilevelObjects.reserve(n);
+        float scale = mvInvScaleFactor[level];
+//        cout << "level: " << level;
+        for(int iObject = 0; iObject < n; iObject++)
+        {
+            if(level==0)
+            {
+                ilevelObjects.push_back(objects[iObject]);
+//                cout << " object: [" << objects[iObject].bounding_box.x << ", "
+//                     << objects[iObject].bounding_box.y << ", "
+//                     << objects[iObject].bounding_box.width << ", "
+//                     << objects[iObject].bounding_box.height
+//                     << "]"<< endl;
+            }
+            else
+            {
+                DetectedObject object = objects[iObject];
+                int xOld = object.bounding_box.x;
+                int yOld = object.bounding_box.y;
+                int widthOld = object.bounding_box.width;
+                int heightOld = object.bounding_box.height;
+                DetectedObject newObject(object.object_class,object.prob, cv::Rect(xOld*scale, yOld*scale, widthOld*scale, heightOld*scale));
+                ilevelObjects.push_back(newObject);
+//                cout << " object: [" << newObject.bounding_box.x << ", "
+//                     << newObject.bounding_box.y << ", "
+//                     << newObject.bounding_box.width << ", "
+//                     << newObject.bounding_box.height
+//                     << "]"<< endl;
+            }
+
+        }
+        objectPyramid_.push_back(ilevelObjects);
+    }
+
+}
+
+
+void ORBextractor::showObjectInPyramid(std::vector<std::vector<DetectedObject>> &objectPyramid_)
+{
+    for(int level=0; level<nlevels; level++)
+    {
+        cv::Mat image = mvImagePyramid[level];
+        vector<DetectedObject> objects = objectPyramid_[level];
+        int nObjects = objects.size();
+//        cout << nObjects << endl;
+        for(int iObject = 0; iObject < nObjects; iObject++)
+        {
+            DetectedObject object = objects[iObject];
+            cv::rectangle(image, object.bounding_box, cv::Scalar(0,255,0), 2);
+        }
+//        stringstream ss;
+//        string nlevelstr;
+//        ss << level;
+//        ss >> nlevelstr;
+//        nlevelstr = "level " + nlevelstr;
+//        cv::namedWindow(nlevelstr);
+//        cv::imshow(nlevelstr, image);
+//        cv::waitKey(1);
+    }
+}
+
+void ORBextractor::ComputeKeyPointsOctTreeObject(std::vector<std::vector<KeyPoint> > &allKeypoints, std::vector<std::vector<DetectedObject>> &objectPyramid)
+{
+    allKeypoints.resize(nlevels);
+
+    float areaTH = 0.0;
+
+    const float W = 30;
+
+    for (int level = 0; level < nlevels; ++level)
+    {
+        std::vector<DetectedObject> vobject = objectPyramid[level];
+
+        const int minBorderX = EDGE_THRESHOLD-3;
+        const int minBorderY = minBorderX;
+        const int maxBorderX = mvImagePyramid[level].cols-EDGE_THRESHOLD+3;
+        const int maxBorderY = mvImagePyramid[level].rows-EDGE_THRESHOLD+3;
+
+        vector<cv::KeyPoint> vToDistributeKeys;
+        vToDistributeKeys.reserve(nfeatures*10);
+
+        const float width = (maxBorderX-minBorderX);
+        const float height = (maxBorderY-minBorderY);
+
+        const int nCols = width/W;
+        const int nRows = height/W;
+        const int wCell = ceil(width/nCols);
+        const int hCell = ceil(height/nRows);
+
+        for(int i=0; i<nRows; i++)
+        {
+            const float iniY =minBorderY+i*hCell;
+            float maxY = iniY+hCell+6;
+
+            if(iniY>=maxBorderY-3)
+                continue;
+            if(maxY>maxBorderY)
+                maxY = maxBorderY;
+
+            for(int j=0; j<nCols; j++)
+            {
+                const float iniX =minBorderX+j*wCell;
+                float maxX = iniX+wCell+6;
+                if(iniX>=maxBorderX-6)
+                    continue;
+                if(maxX>maxBorderX)
+                    maxX = maxBorderX;
+                cv::Rect curGrid(iniX, iniY, maxX-iniX, maxY-iniY);
+                if(gridInObjectBox(vobject, curGrid, areaTH))
+                    continue;
+
+                vector<cv::KeyPoint> vKeysCell;
+                FAST(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX),
+                     vKeysCell,iniThFAST,true);
+
+                if(vKeysCell.empty())
+                {
+                    FAST(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX),
+                         vKeysCell,minThFAST,true);
+                }
+
+                if(!vKeysCell.empty())
+                {
+                    for(vector<cv::KeyPoint>::iterator vit=vKeysCell.begin(); vit!=vKeysCell.end();vit++)
+                    {
+                        (*vit).pt.x+=j*wCell;
+                        (*vit).pt.y+=i*hCell;
+                        vToDistributeKeys.push_back(*vit);
+                    }
+                }
+
+            }
+        }
+
+        vector<KeyPoint> & keypoints = allKeypoints[level];
+        keypoints.reserve(nfeatures);
+
+        keypoints = DistributeOctTree(vToDistributeKeys, minBorderX, maxBorderX,
+                                      minBorderY, maxBorderY,mnFeaturesPerLevel[level], level);
+
+        const int scaledPatchSize = PATCH_SIZE*mvScaleFactor[level];
+
+        // Add border to coordinates and scale information
+        const int nkps = keypoints.size();
+        for(int i=0; i<nkps ; i++)
+        {
+            keypoints[i].pt.x+=minBorderX;
+            keypoints[i].pt.y+=minBorderY;
+            keypoints[i].octave=level;
+            keypoints[i].size = scaledPatchSize;
+        }
+    }
+
+    // compute orientations
+    for (int level = 0; level < nlevels; ++level)
+        computeOrientation(mvImagePyramid[level], allKeypoints[level], umax);
+}
+
+//compute two boxes' intersection area
+float overlap(float x1, float w1, float x2, float w2)
+{
+    float l1 = x1;
+    float l2 = x2;
+    float left = l1 > l2 ? l1 : l2;
+    float r1 = x1 + w1;
+    float r2 = x2 + w2;
+    float right = r1 < r2 ? r1 : r2;
+    return right - left;
+}
+
+float box_intersection(cv::Rect a, cv::Rect b)
+{
+    float w = overlap(a.x, a.width, b.x, b.width);
+    float h = overlap(a.y, a.height, b.y, b.height);
+    if(w < 0 || h < 0) return 0;
+    float area = w*h;
+    return area;
+}
+
+bool ORBextractor::gridInObjectBox(std::vector<DetectedObject> &objectPyramid, Rect grid, float areaTh)
+{
+    int nobject = objectPyramid.size();
+    for(int iobject = 0; iobject < nobject; iobject++)
+    {
+        DetectedObject o = objectPyramid[iobject];
+        cv::Rect box = o.bounding_box;
+        float th = float(box_intersection(box, grid))/float(grid.area());
+        if(th > areaTh)
+            return true;
+    }
+    return false;
+}
+
 
 } //namespace ORB_SLAM
