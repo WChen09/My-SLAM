@@ -39,7 +39,6 @@
 
 #include "unistd.h"
 
-
 using namespace std;
 
 namespace ORB_SLAM2
@@ -1035,7 +1034,7 @@ bool Tracking::NeedNewKeyFrame()
 
     // Local Mapping accept keyframes?
     bool bLocalMappingIdle = mpLocalMapper->AcceptKeyFrames();
-
+    cout << "bLocalMappingIdle: " << bLocalMappingIdle << endl;
     // Check how many "close" points are being tracked and how many could be potentially created.
     int nNonTrackedClose = 0;
     int nTrackedClose= 0;
@@ -1072,6 +1071,7 @@ bool Tracking::NeedNewKeyFrame()
     // Condition 2: Few tracked points compared to reference keyframe. Lots of visual odometry compared to map matches.
     const bool c2 = ((mnMatchesInliers<nRefMatches*thRefRatio|| bNeedToInsertClose) && mnMatchesInliers>15);
 
+    cout << c1a << "||" << c1b << "||" << c1c << ")&&" << c2 << endl;
     if((c1a||c1b||c1c)&&c2)
     {
         // If the mapping accepts keyframes, insert keyframe.

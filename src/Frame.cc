@@ -199,7 +199,7 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
     mvInvLevelSigma2 = mpORBextractorLeft->GetInverseScaleSigmaSquares();
 
     // ORB extraction
-    ExtractORB(0,imGray);
+    ExtractORBObject(0,imGray, detected);
 
     // Objects
     mvObjects = detected;
@@ -280,6 +280,13 @@ void Frame::ExtractORB(int flag, const cv::Mat &im)
         (*mpORBextractorLeft)(im,cv::Mat(),mvKeys,mDescriptors);
     else
         (*mpORBextractorRight)(im,cv::Mat(),mvKeysRight,mDescriptorsRight);
+}
+void Frame::ExtractORBObject(int flag, const cv::Mat &im, const std::vector<DetectedObject> &detected)
+{
+    if(flag==0)
+        (*mpORBextractorLeft)(im,cv::Mat(),mvKeys,mDescriptors, detected);
+    else
+        (*mpORBextractorRight)(im,cv::Mat(),mvKeysRight,mDescriptorsRight, detected);
 }
 
 void Frame::SetPose(cv::Mat Tcw)

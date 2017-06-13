@@ -1287,7 +1287,7 @@ void ORBextractor::ComputeKeyPointsOctTreeObject(std::vector<std::vector<KeyPoin
 {
     allKeypoints.resize(nlevels);
 
-    float areaTH = 0.0;
+    float areaTH = 0.1;
 
     const float W = 30;
 

@@ -156,4 +156,5 @@ void Converter::RmatOfQuat(cv::Mat &M, const cv::Mat &q) {
       M.at<float>(i,j) = _m(i,j);
 }
 
+
 } //namespace ORB_SLAM
