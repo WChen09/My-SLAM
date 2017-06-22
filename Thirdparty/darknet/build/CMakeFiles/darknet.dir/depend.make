@@ -198,6 +198,8 @@ CMakeFiles/darknet.dir/src/art.cpp.o: /home/wchen/opencv-3.1.0/modules/ml/includ
 CMakeFiles/darknet.dir/src/art.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect.hpp
 CMakeFiles/darknet.dir/src/art.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/detection_based_tracker.hpp
 CMakeFiles/darknet.dir/src/art.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/objdetect_c.h
+CMakeFiles/darknet.dir/src/art.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d.hpp
+CMakeFiles/darknet.dir/src/art.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d/nonfree.hpp
 CMakeFiles/darknet.dir/src/art.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo.hpp
 CMakeFiles/darknet.dir/src/art.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo/photo_c.h
 CMakeFiles/darknet.dir/src/art.cpp.o: /home/wchen/opencv-3.1.0/modules/video/include/opencv2/video.hpp
@@ -608,6 +610,8 @@ CMakeFiles/darknet.dir/src/cifar.cpp.o: /home/wchen/opencv-3.1.0/modules/ml/incl
 CMakeFiles/darknet.dir/src/cifar.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect.hpp
 CMakeFiles/darknet.dir/src/cifar.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/detection_based_tracker.hpp
 CMakeFiles/darknet.dir/src/cifar.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/objdetect_c.h
+CMakeFiles/darknet.dir/src/cifar.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d.hpp
+CMakeFiles/darknet.dir/src/cifar.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d/nonfree.hpp
 CMakeFiles/darknet.dir/src/cifar.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo.hpp
 CMakeFiles/darknet.dir/src/cifar.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo/photo_c.h
 CMakeFiles/darknet.dir/src/cifar.cpp.o: /home/wchen/opencv-3.1.0/modules/video/include/opencv2/video.hpp
@@ -735,6 +739,8 @@ CMakeFiles/darknet.dir/src/classifier.cpp.o: /home/wchen/opencv-3.1.0/modules/ml
 CMakeFiles/darknet.dir/src/classifier.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect.hpp
 CMakeFiles/darknet.dir/src/classifier.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/detection_based_tracker.hpp
 CMakeFiles/darknet.dir/src/classifier.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/objdetect_c.h
+CMakeFiles/darknet.dir/src/classifier.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d.hpp
+CMakeFiles/darknet.dir/src/classifier.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d/nonfree.hpp
 CMakeFiles/darknet.dir/src/classifier.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo.hpp
 CMakeFiles/darknet.dir/src/classifier.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo/photo_c.h
 CMakeFiles/darknet.dir/src/classifier.cpp.o: /home/wchen/opencv-3.1.0/modules/video/include/opencv2/video.hpp
@@ -862,6 +868,8 @@ CMakeFiles/darknet.dir/src/coco.cpp.o: /home/wchen/opencv-3.1.0/modules/ml/inclu
 CMakeFiles/darknet.dir/src/coco.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect.hpp
 CMakeFiles/darknet.dir/src/coco.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/detection_based_tracker.hpp
 CMakeFiles/darknet.dir/src/coco.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/objdetect_c.h
+CMakeFiles/darknet.dir/src/coco.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d.hpp
+CMakeFiles/darknet.dir/src/coco.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d/nonfree.hpp
 CMakeFiles/darknet.dir/src/coco.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo.hpp
 CMakeFiles/darknet.dir/src/coco.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo/photo_c.h
 CMakeFiles/darknet.dir/src/coco.cpp.o: /home/wchen/opencv-3.1.0/modules/video/include/opencv2/video.hpp
@@ -1508,6 +1516,8 @@ CMakeFiles/darknet.dir/src/darknet.cpp.o: /home/wchen/opencv-3.1.0/modules/ml/in
 CMakeFiles/darknet.dir/src/darknet.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect.hpp
 CMakeFiles/darknet.dir/src/darknet.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/detection_based_tracker.hpp
 CMakeFiles/darknet.dir/src/darknet.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/objdetect_c.h
+CMakeFiles/darknet.dir/src/darknet.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d.hpp
+CMakeFiles/darknet.dir/src/darknet.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d/nonfree.hpp
 CMakeFiles/darknet.dir/src/darknet.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo.hpp
 CMakeFiles/darknet.dir/src/darknet.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo/photo_c.h
 CMakeFiles/darknet.dir/src/darknet.cpp.o: /home/wchen/opencv-3.1.0/modules/video/include/opencv2/video.hpp
@@ -1783,6 +1793,8 @@ CMakeFiles/darknet.dir/src/demo.cpp.o: /home/wchen/opencv-3.1.0/modules/ml/inclu
 CMakeFiles/darknet.dir/src/demo.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect.hpp
 CMakeFiles/darknet.dir/src/demo.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/detection_based_tracker.hpp
 CMakeFiles/darknet.dir/src/demo.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/objdetect_c.h
+CMakeFiles/darknet.dir/src/demo.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d.hpp
+CMakeFiles/darknet.dir/src/demo.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d/nonfree.hpp
 CMakeFiles/darknet.dir/src/demo.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo.hpp
 CMakeFiles/darknet.dir/src/demo.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo/photo_c.h
 CMakeFiles/darknet.dir/src/demo.cpp.o: /home/wchen/opencv-3.1.0/modules/video/include/opencv2/video.hpp
@@ -1986,6 +1998,8 @@ CMakeFiles/darknet.dir/src/detector.cpp.o: /home/wchen/opencv-3.1.0/modules/ml/i
 CMakeFiles/darknet.dir/src/detector.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect.hpp
 CMakeFiles/darknet.dir/src/detector.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/detection_based_tracker.hpp
 CMakeFiles/darknet.dir/src/detector.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/objdetect_c.h
+CMakeFiles/darknet.dir/src/detector.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d.hpp
+CMakeFiles/darknet.dir/src/detector.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d/nonfree.hpp
 CMakeFiles/darknet.dir/src/detector.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo.hpp
 CMakeFiles/darknet.dir/src/detector.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo/photo_c.h
 CMakeFiles/darknet.dir/src/detector.cpp.o: /home/wchen/opencv-3.1.0/modules/video/include/opencv2/video.hpp
@@ -2323,6 +2337,8 @@ CMakeFiles/darknet.dir/src/go.cpp.o: /home/wchen/opencv-3.1.0/modules/ml/include
 CMakeFiles/darknet.dir/src/go.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect.hpp
 CMakeFiles/darknet.dir/src/go.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/detection_based_tracker.hpp
 CMakeFiles/darknet.dir/src/go.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/objdetect_c.h
+CMakeFiles/darknet.dir/src/go.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d.hpp
+CMakeFiles/darknet.dir/src/go.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d/nonfree.hpp
 CMakeFiles/darknet.dir/src/go.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo.hpp
 CMakeFiles/darknet.dir/src/go.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo/photo_c.h
 CMakeFiles/darknet.dir/src/go.cpp.o: /home/wchen/opencv-3.1.0/modules/video/include/opencv2/video.hpp
@@ -2522,6 +2538,8 @@ CMakeFiles/darknet.dir/src/image.cpp.o: /home/wchen/opencv-3.1.0/modules/ml/incl
 CMakeFiles/darknet.dir/src/image.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect.hpp
 CMakeFiles/darknet.dir/src/image.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/detection_based_tracker.hpp
 CMakeFiles/darknet.dir/src/image.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/objdetect_c.h
+CMakeFiles/darknet.dir/src/image.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d.hpp
+CMakeFiles/darknet.dir/src/image.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d/nonfree.hpp
 CMakeFiles/darknet.dir/src/image.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo.hpp
 CMakeFiles/darknet.dir/src/image.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo/photo_c.h
 CMakeFiles/darknet.dir/src/image.cpp.o: /home/wchen/opencv-3.1.0/modules/video/include/opencv2/video.hpp
@@ -2962,6 +2980,8 @@ CMakeFiles/darknet.dir/src/nightmare.cpp.o: /home/wchen/opencv-3.1.0/modules/ml/
 CMakeFiles/darknet.dir/src/nightmare.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect.hpp
 CMakeFiles/darknet.dir/src/nightmare.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/detection_based_tracker.hpp
 CMakeFiles/darknet.dir/src/nightmare.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/objdetect_c.h
+CMakeFiles/darknet.dir/src/nightmare.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d.hpp
+CMakeFiles/darknet.dir/src/nightmare.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d/nonfree.hpp
 CMakeFiles/darknet.dir/src/nightmare.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo.hpp
 CMakeFiles/darknet.dir/src/nightmare.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo/photo_c.h
 CMakeFiles/darknet.dir/src/nightmare.cpp.o: /home/wchen/opencv-3.1.0/modules/video/include/opencv2/video.hpp
@@ -3408,6 +3428,8 @@ CMakeFiles/darknet.dir/src/rnn.cpp.o: /home/wchen/opencv-3.1.0/modules/ml/includ
 CMakeFiles/darknet.dir/src/rnn.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect.hpp
 CMakeFiles/darknet.dir/src/rnn.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/detection_based_tracker.hpp
 CMakeFiles/darknet.dir/src/rnn.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/objdetect_c.h
+CMakeFiles/darknet.dir/src/rnn.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d.hpp
+CMakeFiles/darknet.dir/src/rnn.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d/nonfree.hpp
 CMakeFiles/darknet.dir/src/rnn.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo.hpp
 CMakeFiles/darknet.dir/src/rnn.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo/photo_c.h
 CMakeFiles/darknet.dir/src/rnn.cpp.o: /home/wchen/opencv-3.1.0/modules/video/include/opencv2/video.hpp
@@ -3610,6 +3632,8 @@ CMakeFiles/darknet.dir/src/rnn_vid.cpp.o: /home/wchen/opencv-3.1.0/modules/ml/in
 CMakeFiles/darknet.dir/src/rnn_vid.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect.hpp
 CMakeFiles/darknet.dir/src/rnn_vid.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/detection_based_tracker.hpp
 CMakeFiles/darknet.dir/src/rnn_vid.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/objdetect_c.h
+CMakeFiles/darknet.dir/src/rnn_vid.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d.hpp
+CMakeFiles/darknet.dir/src/rnn_vid.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d/nonfree.hpp
 CMakeFiles/darknet.dir/src/rnn_vid.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo.hpp
 CMakeFiles/darknet.dir/src/rnn_vid.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo/photo_c.h
 CMakeFiles/darknet.dir/src/rnn_vid.cpp.o: /home/wchen/opencv-3.1.0/modules/video/include/opencv2/video.hpp
@@ -3954,6 +3978,8 @@ CMakeFiles/darknet.dir/src/super.cpp.o: /home/wchen/opencv-3.1.0/modules/ml/incl
 CMakeFiles/darknet.dir/src/super.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect.hpp
 CMakeFiles/darknet.dir/src/super.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/detection_based_tracker.hpp
 CMakeFiles/darknet.dir/src/super.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/objdetect_c.h
+CMakeFiles/darknet.dir/src/super.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d.hpp
+CMakeFiles/darknet.dir/src/super.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d/nonfree.hpp
 CMakeFiles/darknet.dir/src/super.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo.hpp
 CMakeFiles/darknet.dir/src/super.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo/photo_c.h
 CMakeFiles/darknet.dir/src/super.cpp.o: /home/wchen/opencv-3.1.0/modules/video/include/opencv2/video.hpp
@@ -4080,6 +4106,8 @@ CMakeFiles/darknet.dir/src/swag.cpp.o: /home/wchen/opencv-3.1.0/modules/ml/inclu
 CMakeFiles/darknet.dir/src/swag.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect.hpp
 CMakeFiles/darknet.dir/src/swag.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/detection_based_tracker.hpp
 CMakeFiles/darknet.dir/src/swag.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/objdetect_c.h
+CMakeFiles/darknet.dir/src/swag.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d.hpp
+CMakeFiles/darknet.dir/src/swag.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d/nonfree.hpp
 CMakeFiles/darknet.dir/src/swag.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo.hpp
 CMakeFiles/darknet.dir/src/swag.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo/photo_c.h
 CMakeFiles/darknet.dir/src/swag.cpp.o: /home/wchen/opencv-3.1.0/modules/video/include/opencv2/video.hpp
@@ -4204,6 +4232,8 @@ CMakeFiles/darknet.dir/src/tag.cpp.o: /home/wchen/opencv-3.1.0/modules/ml/includ
 CMakeFiles/darknet.dir/src/tag.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect.hpp
 CMakeFiles/darknet.dir/src/tag.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/detection_based_tracker.hpp
 CMakeFiles/darknet.dir/src/tag.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/objdetect_c.h
+CMakeFiles/darknet.dir/src/tag.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d.hpp
+CMakeFiles/darknet.dir/src/tag.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d/nonfree.hpp
 CMakeFiles/darknet.dir/src/tag.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo.hpp
 CMakeFiles/darknet.dir/src/tag.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo/photo_c.h
 CMakeFiles/darknet.dir/src/tag.cpp.o: /home/wchen/opencv-3.1.0/modules/video/include/opencv2/video.hpp
@@ -4342,6 +4372,8 @@ CMakeFiles/darknet.dir/src/voxel.cpp.o: /home/wchen/opencv-3.1.0/modules/ml/incl
 CMakeFiles/darknet.dir/src/voxel.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect.hpp
 CMakeFiles/darknet.dir/src/voxel.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/detection_based_tracker.hpp
 CMakeFiles/darknet.dir/src/voxel.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/objdetect_c.h
+CMakeFiles/darknet.dir/src/voxel.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d.hpp
+CMakeFiles/darknet.dir/src/voxel.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d/nonfree.hpp
 CMakeFiles/darknet.dir/src/voxel.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo.hpp
 CMakeFiles/darknet.dir/src/voxel.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo/photo_c.h
 CMakeFiles/darknet.dir/src/voxel.cpp.o: /home/wchen/opencv-3.1.0/modules/video/include/opencv2/video.hpp
@@ -4466,6 +4498,8 @@ CMakeFiles/darknet.dir/src/writing.cpp.o: /home/wchen/opencv-3.1.0/modules/ml/in
 CMakeFiles/darknet.dir/src/writing.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect.hpp
 CMakeFiles/darknet.dir/src/writing.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/detection_based_tracker.hpp
 CMakeFiles/darknet.dir/src/writing.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/objdetect_c.h
+CMakeFiles/darknet.dir/src/writing.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d.hpp
+CMakeFiles/darknet.dir/src/writing.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d/nonfree.hpp
 CMakeFiles/darknet.dir/src/writing.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo.hpp
 CMakeFiles/darknet.dir/src/writing.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo/photo_c.h
 CMakeFiles/darknet.dir/src/writing.cpp.o: /home/wchen/opencv-3.1.0/modules/video/include/opencv2/video.hpp
@@ -4597,6 +4631,8 @@ CMakeFiles/darknet.dir/src/yolo.cpp.o: /home/wchen/opencv-3.1.0/modules/ml/inclu
 CMakeFiles/darknet.dir/src/yolo.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect.hpp
 CMakeFiles/darknet.dir/src/yolo.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/detection_based_tracker.hpp
 CMakeFiles/darknet.dir/src/yolo.cpp.o: /home/wchen/opencv-3.1.0/modules/objdetect/include/opencv2/objdetect/objdetect_c.h
+CMakeFiles/darknet.dir/src/yolo.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d.hpp
+CMakeFiles/darknet.dir/src/yolo.cpp.o: /home/wchen/opencv-3.1.0/modules/opencv_contrib/modules/xfeatures2d/include/opencv2/xfeatures2d/nonfree.hpp
 CMakeFiles/darknet.dir/src/yolo.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo.hpp
 CMakeFiles/darknet.dir/src/yolo.cpp.o: /home/wchen/opencv-3.1.0/modules/photo/include/opencv2/photo/photo_c.h
 CMakeFiles/darknet.dir/src/yolo.cpp.o: /home/wchen/opencv-3.1.0/modules/video/include/opencv2/video.hpp

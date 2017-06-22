@@ -141,7 +141,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const st
 
     yolo = new Yolo();
     yolo->readConfig(yoloSettingFile);
-    yolo->loadConfig();
+//    yolo->loadConfig();
 
     names = yolo->get_labels_();
 

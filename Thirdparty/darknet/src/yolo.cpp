@@ -79,6 +79,7 @@ void Yolo::readConfig(std::string filename){
     //    for(int i = 0; i < nClass; i++){
     //        names[i] = (char*)std::malloc(15);
     //    }
+    loadConfig();
 }
 
 void Yolo::loadConfig(){

@@ -70,7 +70,7 @@ int main(int argc, char **argv)
 
     Yolo yolo;
     yolo.readConfig(argv[2]);
-    yolo.loadConfig();
+//    yolo.loadConfig();
     vector<string> name =yolo.get_labels_();
     names = name;
     cv::Mat im, imGray;

@@ -68,6 +68,8 @@ src/KeyFrameDatabase.cc
 src/Sim3Solver.cc
 src/Initializer.cc
 src/Viewer.cc
+src/ObjectTracker.cc
+src/HungarianAlg.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -120,6 +122,10 @@ target_link_libraries(mono_robotcar ${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/Thirdp
 add_executable(ORB_TEST
 Examples/Monocular/ORB_TEST.cc)
 target_link_libraries(ORB_TEST ${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/Thirdparty/darknet/lib/libdarknet.so)
+
+add_executable(ObjectTracking
+Examples/Monocular/ObjectTracking.cc)
+target_link_libraries(ObjectTracking ${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/Thirdparty/darknet/lib/libdarknet.so)
 
 #add_executable(mono_euroc
 #Examples/Monocular/mono_euroc.cc)
