@@ -9,9 +9,17 @@ const int minThFAST = 2;
 
 ObjectTracker::ObjectTracker(const float maxdistTh, const Size frameSize_): dist_thres(maxdistTh), frameSize(frameSize_)
 {
+    initObject = new DetectedObject(-1, -1, cv::Rect(0, 0, 0, 0));
     size_t MaxObjects = 10;
+
     mvlastDetecedBox.resize(MaxObjects);
     mvnLastTrackObjectID.resize(MaxObjects);
+    for(size_t i = 0; i < mvlastDetecedBox.size(); i++)
+    {
+        mvlastDetecedBox[i] = *initObject;
+        mvnLastTrackObjectID[i] = -1;
+    }
+
     frameId = 0;
     trackId = 0;
 
@@ -24,7 +32,7 @@ ObjectTracker::ObjectTracker(const float maxdistTh, const Size frameSize_): dist
 
     matcher = new ORB_SLAM2::ORBmatcher(0.8);
 
-    initObject = new DetectedObject(-1, -1, cv::Rect(0, 0, 0, 0));
+
 
     writeFrame = new cv::VideoWriter();
 
@@ -47,7 +55,7 @@ ObjectTracker::~ObjectTracker()
 
 void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
 {
-    std::vector<int>* vnCurrentTrackObjectID = new std::vector<int>(vCurrentObjects.size(), -1);
+    vnCurrentTrackObjectID = new std::vector<int>(vCurrentObjects.size(), -1);
 
     if(frameId == 0)
     {
@@ -74,7 +82,8 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
 
         cv::imshow("Video", frame);
         cv::waitKey(1);
-
+        delete vnCurrentTrackObjectID;
+        frameId++;
         return;
     }
 
@@ -84,8 +93,8 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
     size_t N = mvnLastTrackObjectID.size() - std::count(mvnLastTrackObjectID.begin(), mvnLastTrackObjectID.end(), -1);
     size_t M = vCurrentObjects.size();
     {
-        std::vector<float>* vDistance = new std::vector<float>(N*M) ;
-        std::vector<int>* assignment = new std::vector<int>(N,-1);
+        vDistance = new std::vector<float>(N*M) ;
+        assignment = new std::vector<int>(N,-1);
 
         float maxDist = 0;
 
@@ -168,6 +177,8 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
     cv::waitKey(1);
 
     delete vnCurrentTrackObjectID;
+
+    frameId++;
 
 }
 

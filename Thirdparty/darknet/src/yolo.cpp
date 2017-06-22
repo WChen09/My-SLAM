@@ -158,10 +158,10 @@ void Yolo::detect(const cv::Mat& img, std::vector<DetectedObject>& detection)con
         network_predict(net, sized.data);
         std::chrono::steady_clock::time_point t4 = std::chrono::steady_clock::now();
 
-        std::cout << "  reshape duration: " << std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count() << std::endl
-                  << "  resize duration: " << std::chrono::duration_cast<std::chrono::duration<double> >(t3 - t2).count() << std::endl
-                  << "  prediction duration: " << std::chrono::duration_cast<std::chrono::duration<double> >(t4 - t3).count()
-                  << std::endl;
+//        std::cout << "  reshape duration: " << std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count() << std::endl
+//                  << "  resize duration: " << std::chrono::duration_cast<std::chrono::duration<double> >(t3 - t2).count() << std::endl
+//                  << "  prediction duration: " << std::chrono::duration_cast<std::chrono::duration<double> >(t4 - t3).count()
+//                  << std::endl;
         get_region_boxes(l, 1, 1, thresh, probs, boxes, 0, 0, hier_thresh);
 
         if (l.softmax_tree && nms)

@@ -50,7 +50,11 @@ protected:
     vObjects mvlastDetecedBox;
     std::vector<int> mvnLastTrackObjectID;
 
+    std::vector<int>* vnCurrentTrackObjectID;
+
     AssignmentProblemSolver* APS;
+    std::vector<float>* vDistance;
+    std::vector<int>* assignment;
 
     string imgStorePath;
 
