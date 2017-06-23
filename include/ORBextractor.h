@@ -65,6 +65,11 @@ public:
                     cv::OutputArray _descriptors,
                     std::vector<DetectedObject> objects);
 
+    void operator ()(cv::InputArray _image, cv::InputArray _mask,
+                     std::vector<cv::KeyPoint>& _keypointsOut, cv::OutputArray _descriptorsOut,
+                     std::vector<cv::KeyPoint>& _keypointsIn, cv::OutputArray _descriptorsIn,
+                     std::vector<DetectedObject> objects);
+
     void extracteORBInObject(cv::InputArray _image, cv::InputArray _mask,
                              std::vector<cv::KeyPoint>& _keypoints,
                              cv::OutputArray _descriptors,
@@ -121,9 +126,15 @@ protected:
 
     void ComputeObjectPyramid(std::vector<DetectedObject> objects, std::vector<std::vector<DetectedObject> > &objectPyramid);
     void showObjectInPyramid(std::vector<std::vector<DetectedObject>> &objectPyramid_);
-    void ComputeKeyPointsOctTreeWithoutObject(std::vector<std::vector<cv::KeyPoint> >& allKeypoints, std::vector<std::vector<DetectedObject> > &objectPyramid);
-    void ComputeKeyPointsOctTreeWithInObject(std::vector<std::vector<cv::KeyPoint> >& allKeypoints, std::vector<std::vector<DetectedObject> > &objectPyramid);
+    void ComputeKeyPointsOctTreeWithoutObject(std::vector<std::vector<cv::KeyPoint> >& allKeypoints, std::vector<std::vector<DetectedObject> > &objectPyramid,
+                                              std::vector<cv::KeyPoint> &_keypointsOut, cv::OutputArray _descriptorsOut);
+    void ComputeKeyPointsOctTreeWithInObject(std::vector<std::vector<cv::KeyPoint> >& allKeypoints, std::vector<std::vector<DetectedObject> > &objectPyramid,
+                                             std::vector<cv::KeyPoint>& _keypointsIn, cv::OutputArray _descriptorsIn);
     bool gridInObjectBox(std::vector<DetectedObject> &objectPyramid, cv::Rect grid, float areaTh);
+
+    void computeDescripter(std::vector<std::vector<cv::KeyPoint>>& allKeypoints,
+                           std::vector<cv::KeyPoint>& _keypoints,
+                           cv::OutputArray &_descriptors);
 };
 
 } //namespace ORB_SLAM

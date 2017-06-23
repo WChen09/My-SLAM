@@ -1126,7 +1126,7 @@ void ORBextractor::operator ()(InputArray _image, InputArray _mask, vector<KeyPo
 //    showObjectInPyramid(objectPyramid);
 
     vector < vector<KeyPoint> > allKeypoints;
-    ComputeKeyPointsOctTreeWithoutObject(allKeypoints, objectPyramid);
+    ComputeKeyPointsOctTreeWithoutObject(allKeypoints, objectPyramid, _keypoints, _descriptors);
 //    ComputeKeyPointsOctTree(allKeypoints);
     //ComputeKeyPointsOld(allKeypoints);
 
@@ -1178,6 +1178,32 @@ void ORBextractor::operator ()(InputArray _image, InputArray _mask, vector<KeyPo
     }
 }
 
+void ORBextractor::operator ()(cv::InputArray _image, cv::InputArray _mask,
+                               std::vector<cv::KeyPoint>& _keypointsOut, cv::OutputArray _descriptorsOut,
+                               std::vector<cv::KeyPoint>& _keypointsIn, cv::OutputArray _descriptorsIn,
+                               std::vector<DetectedObject> objects)
+{
+    if(_image.empty())
+        return;
+
+    Mat image = _image.getMat();
+    assert(image.type() == CV_8UC1 );
+
+    // Pre-compute the scale pyramid
+    ComputePyramid(image);
+
+    std::vector<std::vector<DetectedObject>> objectPyramid;
+    objectPyramid.reserve(nlevels);
+    ComputeObjectPyramid(objects, objectPyramid);
+
+//    showObjectInPyramid(objectPyramid);
+
+    vector < vector<KeyPoint> > allKeypoints;
+    ComputeKeyPointsOctTreeWithoutObject(allKeypoints, objectPyramid, _keypointsOut, _descriptorsOut);
+    ComputeKeyPointsOctTreeWithInObject(allKeypoints, objectPyramid, _keypointsIn, _descriptorsIn);
+
+}
+
 void ORBextractor::extracteORBInObject(InputArray _image, InputArray _mask, std::vector<KeyPoint> &_keypoints, OutputArray _descriptors, std::vector<DetectedObject> objects)
 {
     if(_image.empty())
@@ -1196,56 +1222,8 @@ void ORBextractor::extracteORBInObject(InputArray _image, InputArray _mask, std:
 //    showObjectInPyramid(objectPyramid);
 
     vector < vector<KeyPoint> > allKeypoints;
-    ComputeKeyPointsOctTreeWithInObject(allKeypoints, objectPyramid);
-//    ComputeKeyPointsOctTree(allKeypoints);
-    //ComputeKeyPointsOld(allKeypoints);
+    ComputeKeyPointsOctTreeWithInObject(allKeypoints, objectPyramid, _keypoints, _descriptors);
 
-    Mat descriptors;
-
-    int nkeypoints = 0;
-    for (int level = 0; level < nlevels; ++level)
-        nkeypoints += (int)allKeypoints[level].size();
-    if( nkeypoints == 0 )
-        _descriptors.release();
-    else
-    {
-        _descriptors.create(nkeypoints, 32, CV_8U);
-        descriptors = _descriptors.getMat();
-    }
-
-    _keypoints.clear();
-    _keypoints.reserve(nkeypoints);
-
-    int offset = 0;
-    for (int level = 0; level < nlevels; ++level)
-    {
-        vector<KeyPoint>& keypoints = allKeypoints[level];
-        int nkeypointsLevel = (int)keypoints.size();
-
-        if(nkeypointsLevel==0)
-            continue;
-
-        // preprocess the resized image
-        Mat workingMat = mvImagePyramid[level].clone();
-        GaussianBlur(workingMat, workingMat, Size(7, 7), 2, 2, BORDER_REFLECT_101);
-
-        // Compute the descriptors
-        Mat desc = descriptors.rowRange(offset, offset + nkeypointsLevel);
-        computeDescriptors(workingMat, keypoints, desc, pattern);
-
-        offset += nkeypointsLevel;
-
-        // Scale keypoint coordinates
-        if (level != 0)
-        {
-            float scale = mvScaleFactor[level]; //getScale(level, firstLevel, scaleFactor);
-            for (vector<KeyPoint>::iterator keypoint = keypoints.begin(),
-                 keypointEnd = keypoints.end(); keypoint != keypointEnd; ++keypoint)
-                keypoint->pt *= scale;
-        }
-        // And add the keypoints to the output
-        _keypoints.insert(_keypoints.end(), keypoints.begin(), keypoints.end());
-    }
 }
 
 void ORBextractor::ComputePyramid(cv::Mat image)
@@ -1353,7 +1331,10 @@ void ORBextractor::showObjectInPyramid(std::vector<std::vector<DetectedObject>> 
     }
 }
 
-void ORBextractor::ComputeKeyPointsOctTreeWithInObject(std::vector<std::vector<KeyPoint> > &allKeypoints, std::vector<std::vector<DetectedObject>> &objectPyramid)
+void ORBextractor::ComputeKeyPointsOctTreeWithInObject(std::vector<std::vector<KeyPoint> > &allKeypoints,
+                                                       std::vector<std::vector<DetectedObject>> &objectPyramid,
+                                                       std::vector<KeyPoint> &_keypointsIn,
+                                                       OutputArray _descriptorsIn)
 {
     allKeypoints.resize(nlevels);
 
@@ -1416,9 +1397,14 @@ void ORBextractor::ComputeKeyPointsOctTreeWithInObject(std::vector<std::vector<K
     // compute orientations
     for (int level = 0; level < nlevels; ++level)
         computeOrientation(mvImagePyramid[level], allKeypoints[level], umax);
+
+    computeDescripter(allKeypoints, _keypointsIn, _descriptorsIn);
+
 }
 
-void ORBextractor::ComputeKeyPointsOctTreeWithoutObject(std::vector<std::vector<KeyPoint> > &allKeypoints, std::vector<std::vector<DetectedObject> > &objectPyramid)
+void ORBextractor::ComputeKeyPointsOctTreeWithoutObject(std::vector<std::vector<KeyPoint> > &allKeypoints,
+                                                        std::vector<std::vector<DetectedObject> > &objectPyramid,
+                                                        std::vector<KeyPoint> &_keypointsOut, OutputArray _descriptorsOut)
 {
     allKeypoints.resize(nlevels);
 
@@ -1496,7 +1482,7 @@ void ORBextractor::ComputeKeyPointsOctTreeWithoutObject(std::vector<std::vector<
         keypoints.reserve(nfeatures);
 
         keypoints = DistributeOctTree(vToDistributeKeys, minBorderX, maxBorderX,
-                                      minBorderY, maxBorderY,mnFeaturesPerLevel[level], level);
+                                      minBorderY, maxBorderY,mnFeaturesPerLevel[level]*1.5, level);
 
         const int scaledPatchSize = PATCH_SIZE*mvScaleFactor[level];
 
@@ -1514,8 +1500,63 @@ void ORBextractor::ComputeKeyPointsOctTreeWithoutObject(std::vector<std::vector<
     // compute orientations
     for (int level = 0; level < nlevels; ++level)
         computeOrientation(mvImagePyramid[level], allKeypoints[level], umax);
+
+    computeDescripter(allKeypoints, _keypointsOut, _descriptorsOut);
+
 }
 
+
+void ORBextractor::computeDescripter(std::vector<std::vector<KeyPoint> > &allKeypoints,
+                                     std::vector<KeyPoint> &_keypoints,
+                                     OutputArray& _descriptors)
+{
+    Mat descriptors;
+
+    int nkeypoints = 0;
+    for (int level = 0; level < nlevels; ++level)
+        nkeypoints += (int)allKeypoints[level].size();
+    if( nkeypoints == 0 )
+        _descriptors.release();
+    else
+    {
+        _descriptors.create(nkeypoints, 32, CV_8U);
+        descriptors = _descriptors.getMat();
+    }
+
+    _keypoints.clear();
+    _keypoints.reserve(nkeypoints);
+
+    int offset = 0;
+    for (int level = 0; level < nlevels; ++level)
+    {
+        vector<KeyPoint>& keypoints = allKeypoints[level];
+        int nkeypointsLevel = (int)keypoints.size();
+
+        if(nkeypointsLevel==0)
+            continue;
+
+        // preprocess the resized image
+        Mat workingMat = mvImagePyramid[level].clone();
+        GaussianBlur(workingMat, workingMat, Size(7, 7), 2, 2, BORDER_REFLECT_101);
+
+        // Compute the descriptors
+        Mat desc = descriptors.rowRange(offset, offset + nkeypointsLevel);
+        computeDescriptors(workingMat, keypoints, desc, pattern);
+
+        offset += nkeypointsLevel;
+
+        // Scale keypoint coordinates
+        if (level != 0)
+        {
+            float scale = mvScaleFactor[level]; //getScale(level, firstLevel, scaleFactor);
+            for (vector<KeyPoint>::iterator keypoint = keypoints.begin(),
+                 keypointEnd = keypoints.end(); keypoint != keypointEnd; ++keypoint)
+                keypoint->pt *= scale;
+        }
+        // And add the keypoints to the output
+        _keypoints.insert(_keypoints.end(), keypoints.begin(), keypoints.end());
+    }
+}
 //compute two boxes' intersection area
 float overlap(float x1, float w1, float x2, float w2)
 {

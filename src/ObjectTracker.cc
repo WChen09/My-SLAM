@@ -63,12 +63,15 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
     cv::Mat greyFrame;
     cvtColor(frame, greyFrame, CV_RGB2GRAY);
 
-    std::vector<cv::KeyPoint> kps;
-    cv::Mat descriptors;
+    std::vector<cv::KeyPoint> kpsIn;
+    cv::Mat descriptorsIn;
+    std::vector<cv::KeyPoint> kpsOut;
+    cv::Mat descriptorsOut;
 
-    extractor->extracteORBInObject(greyFrame, cv::Mat(), kps, descriptors, vCurrentObjects);
+//    extractor->extracteORBInObject(greyFrame, cv::Mat(), kpsIn, descriptorsIn, vCurrentObjects);
+    (*extractor)(greyFrame, cv::Mat(), kpsOut, descriptorsOut, kpsIn, descriptorsIn, vCurrentObjects);
 
-    DrawKpsWithinObject(frame, kps);
+    DrawKpsWithinObject(frame, kpsIn, kpsOut);
 
 
     if(frameId == 0)
