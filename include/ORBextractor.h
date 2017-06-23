@@ -65,6 +65,11 @@ public:
                     cv::OutputArray _descriptors,
                     std::vector<DetectedObject> objects, int flag);
 
+    void operator()(cv::InputArray _image, cv::InputArray _mask,
+                    std::vector<std::vector<cv::KeyPoint>>& _keypoints,
+                    std::vector<cv::Mat> &_descriptors,
+                    std::vector<DetectedObject> objects);
+
     void operator ()(cv::InputArray _image, cv::InputArray _mask,
                      std::vector<cv::KeyPoint>& _keypointsOut, cv::OutputArray _descriptorsOut,
                      std::vector<cv::KeyPoint>& _keypointsIn, cv::OutputArray _descriptorsIn,
@@ -128,8 +133,17 @@ protected:
     void showObjectInPyramid(std::vector<std::vector<DetectedObject>> &objectPyramid_);
     void ComputeKeyPointsOctTreeWithoutObject(std::vector<std::vector<DetectedObject> > &objectPyramid,
                                               std::vector<cv::KeyPoint> &_keypointsOut, cv::OutputArray _descriptorsOut);
+
+    // _keypointsIn and _descriptorsIn distribute by scale then object
     void ComputeKeyPointsOctTreeWithInObject(std::vector<std::vector<DetectedObject> > &objectPyramid,
                                              std::vector<cv::KeyPoint>& _keypointsIn, cv::OutputArray _descriptorsIn);
+
+    // _keypointsIn and _descriptorsIn distribute by object then scale,
+    // more convenient for object matching
+    void ComputeKeyPointsOctTreeWithInObject(std::vector<std::vector<DetectedObject> > &objectPyramid,
+                                             std::vector<std::vector<cv::KeyPoint>>& _keypointsIn,
+                                             std::vector<cv::Mat> &_descriptorsIn);
+
     bool gridInObjectBox(std::vector<DetectedObject> &objectPyramid, cv::Rect grid, float areaTh);
 
     void computeDescripter(std::vector<std::vector<cv::KeyPoint>>& allKeypoints,

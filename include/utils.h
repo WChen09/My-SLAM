@@ -17,6 +17,7 @@ void DrawDetector(cv::Mat& frame, std::vector<DetectedObject>& detectedBox, std:
 void DrawDetector(cv::Mat& frame, std::vector<DetectedObject>& detectedBox, std::vector<int>& nTracker_,
                   std::vector<DetectedObject>& predictDetectedBox, std::vector<int>& predictNTracker_);
 void DrawKpsWithinObject(cv::Mat& frame, std::vector<cv::KeyPoint> KPsIn, std::vector<KeyPoint> KPsOut);
+void DrawKpsWithinObject(cv::Mat& frame, std::vector<std::vector<cv::KeyPoint>> KPsIn, std::vector<cv::KeyPoint> KPsOut);
 
 void drawBoundingBox(Mat image, vector<Point2f> bb)
 {
@@ -110,6 +111,42 @@ void DrawKpsWithinObject(cv::Mat& frame, std::vector<cv::KeyPoint> KPsIn, std::v
 
         cv::rectangle(frame,pt1,pt2,cv::Scalar(255,0,0));//magenta color
         cv::circle(frame,KPsIn[i].pt,2,cv::Scalar(255,0,0),-1);
+
+    }
+
+
+    for(size_t i = 0; i < KPsOut.size(); i++)
+    {
+        cv::Point2f pt1,pt2;
+        pt1.x=KPsOut[i].pt.x-r;
+        pt1.y=KPsOut[i].pt.y-r;
+        pt2.x=KPsOut[i].pt.x+r;
+        pt2.y=KPsOut[i].pt.y+r;
+
+        cv::rectangle(frame,pt1,pt2,cv::Scalar(0,255,0));//magenta color
+        cv::circle(frame,KPsOut[i].pt,2,cv::Scalar(0,255,0),-1);
+
+    }
+}
+
+void DrawKpsWithinObject(cv::Mat& frame, std::vector<std::vector<cv::KeyPoint>> KPsIn, std::vector<cv::KeyPoint> KPsOut)
+{
+    const float r = 5;
+
+    for(size_t iobject = 0; iobject < KPsIn.size(); iobject++)
+    {
+        for(size_t i = 0; i < KPsIn[iobject].size(); i++)
+        {
+            cv::Point2f pt1,pt2;
+            pt1.x=KPsIn[iobject][i].pt.x-r;
+            pt1.y=KPsIn[iobject][i].pt.y-r;
+            pt2.x=KPsIn[iobject][i].pt.x+r;
+            pt2.y=KPsIn[iobject][i].pt.y+r;
+
+            cv::rectangle(frame,pt1,pt2,cv::Scalar(255,0,0));//magenta color
+            cv::circle(frame,KPsIn[iobject][i].pt,2,cv::Scalar(255,0,0),-1);
+        }
+
 
     }
 

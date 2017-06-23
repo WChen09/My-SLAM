@@ -11,7 +11,8 @@
 #include "Thirdparty/darknet/src/object.h"
 #include "HungarianAlg.h"
 #include "ORBextractor.h"
-#include "ORBmatcher.h"
+
+#include <opencv2/features2d.hpp>
 
 using namespace std;
 using namespace cv;
@@ -37,9 +38,15 @@ protected:
     std::vector<cv::KeyPoint> kpsIn;
     cv::Mat descriptorsIn;
     std::vector<cv::KeyPoint> kpsOut;
-    cv::Mat descriptorsOut;
+    cv::Mat  descriptorsOut;
 
-    void ExtractORB(int flag, const cv::Mat &im, const std::vector<DetectedObject> vCurrentObjects);
+    std::vector<std::vector<cv::KeyPoint>>* vkpsInObject;
+    std::vector<cv::Mat>* vdescriptorsInObject;
+
+    void ExtractORB(int flag, const cv::Mat &im,
+                    const std::vector<DetectedObject> vCurrentObjects);
+
+    void reorganizeORB(std::vector<KeyPoint> KpsIn, cv::Mat descriptorsIn, std::vector<DetectedObject> ObjectBox);
 
     //config parameters
     const float dist_thres;
@@ -49,15 +56,18 @@ protected:
 
     ORB_SLAM2::ORBextractor* extractorIn;
     ORB_SLAM2::ORBextractor* extractorOut;
-    ORB_SLAM2::ORBmatcher* matcher;
+
+    cv::Ptr<cv::DescriptorMatcher> matcher;
 
     // Record overall Box information
     std::vector<std::pair<vObjects, std::vector<int>>>* vframeObjectWithIdpair;
-    std::vector<std::pair<std::vector<cv::KeyPoint>, cv::Mat>>* vframeObjectORBpair;
+    std::vector<std::pair<std::vector<std::vector<cv::KeyPoint>>, std::vector<cv::Mat>>>* vframeInObjectORBpair;
+    std::vector<std::pair<std::vector<cv::KeyPoint>, cv::Mat>>* vframeOutObjectORBpair;
 
     // Record last frame's box information
     vObjects mvlastDetecedBox;
     std::vector<int> mvnLastTrackObjectID;
+    cv::Mat lastFrame;
 
     std::vector<int>* vnCurrentTrackObjectID;
 

@@ -3,7 +3,7 @@
 #include <chrono>
 
 // ORB Extractor parameters
-const int nFeatures = 1000;
+const int nFeatures = 800;
 const float scaleFactor = 1.2;
 const int nLevels = 8;
 const int iniFAST = 20;
@@ -32,9 +32,10 @@ ObjectTracker::ObjectTracker(const float maxdistTh, const Size frameSize_): dist
     extractorIn = new ORB_SLAM2::ORBextractor(nFeatures, scaleFactor, nLevels, iniFAST, minThFAST);
     extractorOut = new ORB_SLAM2::ORBextractor(nFeatures*2, scaleFactor, nLevels, iniFAST, minThFAST);
 
-    matcher = new ORB_SLAM2::ORBmatcher(0.8);
+    matcher = DescriptorMatcher::create("BruteForce-Hamming");
 
-    vframeObjectORBpair = new std::vector<std::pair<std::vector<cv::KeyPoint>, cv::Mat>>();
+    vframeInObjectORBpair = new std::vector<std::pair<std::vector<std::vector<cv::KeyPoint>>, std::vector<cv::Mat>>>();
+    vframeOutObjectORBpair = new std::vector<std::pair<std::vector<cv::KeyPoint>, cv::Mat>>();
 
     writeFrame = new cv::VideoWriter();
 
@@ -56,7 +57,8 @@ ObjectTracker::~ObjectTracker()
     delete writeFrame;
     delete assignment;
     delete vDistance;
-    delete vframeObjectORBpair;
+    delete vframeInObjectORBpair;
+    delete vframeOutObjectORBpair;
 
 }
 void ObjectTracker::ExtractORB(int flag, const Mat &im, const std::vector<DetectedObject> vCurrentObjects)
@@ -65,8 +67,6 @@ void ObjectTracker::ExtractORB(int flag, const Mat &im, const std::vector<Detect
         (*extractorOut)(im, cv::Mat(), kpsOut, descriptorsOut, vCurrentObjects, 0);
     else
         (*extractorIn)(im, cv::Mat(), kpsIn, descriptorsIn, vCurrentObjects, 1);
-
-
 }
 
 void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
@@ -81,26 +81,15 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
     std::chrono::steady_clock::time_point t0 = std::chrono::steady_clock::now();
     std::thread inThread(&ObjectTracker::ExtractORB, this, 1, greyFrame, vCurrentObjects);
     std::thread outThread(&ObjectTracker::ExtractORB, this, 0, greyFrame, vCurrentObjects);
-
     outThread.join();
     inThread.join();
     std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
     std::cout << "AllBox " << std::chrono::duration_cast<std::chrono::duration<double> >(t1 - t0).count() << " seconds." << std::endl;
+//    DrawKpsWithinObject(frame, kpsIn, kpsOut);
 
+    reorganizeORB(kpsIn, descriptorsIn, vCurrentObjects);
 
-//    std::chrono::steady_clock::time_point t0 = std::chrono::steady_clock::now();
-//    ExtractORB(1, greyFrame, vCurrentObjects);
-//    std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
-//    ExtractORB(0, greyFrame, vCurrentObjects);
-//    std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
-
-//    std::cout << "InBox " << std::chrono::duration_cast<std::chrono::duration<double> >(t1 - t0).count() << " seconds." << std::endl
-//              << "OutBox " << std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count() << " seconds." << std::endl << std::endl;
-
-
-
-    DrawKpsWithinObject(frame, kpsIn, kpsOut);
-
+    DrawKpsWithinObject(frame, *vkpsInObject, kpsOut);
 
     if(frameId == 0)
     {
@@ -114,25 +103,30 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
         }
 
         // store current frame information
-        auto p1 = std::make_pair(mvlastDetecedBox, mvnLastTrackObjectID);
-        vframeObjectWithIdpair->push_back(p1);
+        vframeObjectWithIdpair->push_back(std::make_pair(mvlastDetecedBox,
+                                                         mvnLastTrackObjectID));
+        vframeInObjectORBpair->push_back(std::make_pair(*vkpsInObject, *vdescriptorsInObject));
+        vframeOutObjectORBpair->push_back(std::make_pair(kpsOut,descriptorsOut));
 
         DrawDetector(frame, vCurrentObjects, *vnCurrentTrackObjectID);
-
+        lastFrame = frame.clone();
 
         if (writeFrame->isOpened())
             *writeFrame << frame;
 
         cv::imshow("Video", frame);
         cv::waitKey(1);
-        delete vnCurrentTrackObjectID;
+
         frameId++;
+
+        delete vnCurrentTrackObjectID;
+        delete vkpsInObject;
+        delete vdescriptorsInObject;
         return;
     }
 
-
-    // track last frame
-    // assignment
+// track last frame
+ // 1. hungarianAlgorithm assignment
     size_t N = mvnLastTrackObjectID.size() - std::count(mvnLastTrackObjectID.begin(), mvnLastTrackObjectID.end(), -1);
     size_t M = vCurrentObjects.size();
     {
@@ -151,6 +145,7 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
                     maxDist = dist;
             }
         }
+
         APS->Solve(*vDistance, N, M, *assignment, AssignmentProblemSolver::optimal);
 
         // -----------------------------------
@@ -173,6 +168,17 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
             if(assignment->at(i)!=-1)
                 vnCurrentTrackObjectID->at(assignment->at(i)) = mvnLastTrackObjectID[i];
         }
+
+ // 2. using ORB Matcher retrack
+        for(size_t i = 0; i < assignment->size(); i++)
+        {
+            if(assignment->at(i) != -1)
+                continue;
+
+        }
+
+
+
 
         delete vDistance;
         delete assignment;
@@ -208,8 +214,11 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
 
 
     // store current frame information
-    auto p1 = std::make_pair(mvlastDetecedBox, mvnLastTrackObjectID);
-    vframeObjectWithIdpair->push_back(p1);
+    vframeObjectWithIdpair->push_back(std::make_pair(mvlastDetecedBox,
+                                                     mvnLastTrackObjectID));
+    vframeInObjectORBpair->push_back(std::make_pair(*vkpsInObject, *vdescriptorsInObject));
+    vframeOutObjectORBpair->push_back(std::make_pair(kpsOut,descriptorsOut));
+    lastFrame = frame.clone();
 
     if (writeFrame->isOpened())
         *writeFrame << frame;
@@ -276,4 +285,54 @@ void ObjectTracker::CutInBiggestBox(vObjects &vObjects_, Rect &FrameBox)
                 vObjects_[iObject].bounding_box.height = FrameBox.height - rightDownPointy;
         }
     }
+}
+
+void ObjectTracker::reorganizeORB(std::vector<KeyPoint> KpsIn, Mat descriptorsIn, std::vector<DetectedObject> ObjectBox)
+{
+//    std::cout << "whole: " << descriptorsIn << std::endl << std::endl << std::endl;
+    std::vector<int> InObject(KpsIn.size(), -1);
+    vkpsInObject = new std::vector<std::vector<cv::KeyPoint>>(ObjectBox.size());
+    vdescriptorsInObject = new std::vector<cv::Mat>(ObjectBox.size());
+
+    for(size_t iObject=0; iObject < ObjectBox.size(); iObject++)
+    {
+        // keyPoints
+        std::vector<KeyPoint>& kpsInObject = vkpsInObject->at(iObject);
+
+        DetectedObject currentObject = ObjectBox[iObject];
+        cv::Rect box = currentObject.bounding_box;
+        size_t nKPInobject = 0;
+
+        for(size_t iKps = 0; iKps < KpsIn.size(); iKps++)
+        {
+            if(InObject[iKps] != -1)
+                continue;
+
+            cv::Point p(KpsIn[iKps].pt);
+            if(box.contains(p))
+            {
+                kpsInObject.push_back(KpsIn[iKps]);
+                InObject[iKps] = (int)iObject;
+                nKPInobject++;
+            }
+            else
+                continue;
+        }
+        // descriptors
+        cv::Mat objectDescriptor = Mat::zeros((int)nKPInobject, 32, CV_8UC1);
+        int nidescriptor = 0;
+        for(size_t i=0; i<InObject.size(); i++)
+        {
+            if(InObject[i] != (int)iObject)
+                continue;
+
+//            std::cout << i << " " << descriptorsIn.row(i) << std::endl << std::endl;
+
+            descriptorsIn.row(i).copyTo(objectDescriptor.row(nidescriptor));
+            nidescriptor++;
+        }
+//        std::cout << objectDescriptor << std::endl;
+        vdescriptorsInObject->at(iObject) = objectDescriptor;
+    }
+
 }

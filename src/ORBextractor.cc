@@ -1130,6 +1130,31 @@ void ORBextractor::operator ()(InputArray _image, InputArray _mask, vector<KeyPo
         ComputeKeyPointsOctTreeWithInObject(objectPyramid, _keypoints,_descriptors);
     //    ComputeKeyPointsOctTree(allKeypoints);
     //ComputeKeyPointsOld(allKeypoints);
+}
+
+// keypoints and descriptors are divided by object
+// something wrong about the number of features per object and per level
+// which lead to that features are distributed unevenly
+void ORBextractor::operator ()(cv::InputArray _image, cv::InputArray _mask,
+                               std::vector<std::vector<cv::KeyPoint>>& _keypoints,
+                               std::vector<cv::Mat>& _descriptors,
+                               std::vector<DetectedObject> objects)
+{
+    if(_image.empty())
+        return;
+
+    Mat image = _image.getMat();
+    assert(image.type() == CV_8UC1 );
+
+    // Pre-compute the scale pyramid
+    ComputePyramid(image);
+
+    std::vector<std::vector<DetectedObject>> objectPyramid;
+    objectPyramid.reserve(nlevels);
+    ComputeObjectPyramid(objects, objectPyramid);
+
+    ComputeKeyPointsOctTreeWithInObject(objectPyramid, _keypoints, _descriptors);
+
 
 }
 
@@ -1157,6 +1182,7 @@ void ORBextractor::operator ()(cv::InputArray _image, cv::InputArray _mask,
     ComputeKeyPointsOctTreeWithInObject(objectPyramid, _keypointsIn, _descriptorsIn);
 
 }
+
 
 void ORBextractor::extracteORBInObject(InputArray _image, InputArray _mask, std::vector<KeyPoint> &_keypoints, OutputArray _descriptors, std::vector<DetectedObject> objects)
 {
@@ -1284,6 +1310,80 @@ void ORBextractor::showObjectInPyramid(std::vector<std::vector<DetectedObject>> 
     }
 }
 
+void ORBextractor::ComputeKeyPointsOctTreeWithInObject(std::vector<std::vector<DetectedObject> > &objectPyramid,
+                                                       std::vector<std::vector<KeyPoint> > &_keypointsIn,
+                                                       std::vector<cv::Mat>& _descriptorsIn)
+{
+    size_t nObjectPerLevel = objectPyramid[0].size();
+
+    _keypointsIn.resize(nObjectPerLevel);
+    _descriptorsIn.resize(nObjectPerLevel);
+
+    for(size_t iObject = 0; iObject < nObjectPerLevel; iObject++)
+    {
+        vector < vector<KeyPoint> > allKeypointsOneObject;
+        allKeypointsOneObject.resize(nlevels);
+
+        cv::OutputArray& _currentDescriptorsIn = _descriptorsIn[iObject];
+        std::vector<KeyPoint>& _currentKeypointsIn = _keypointsIn[iObject];
+
+        for(int level = 0; level < nlevels; level++)
+        {
+            const int minBorderX = 0;
+            const int minBorderY = 0;
+            const int maxBorderX = mvImagePyramid[level].cols;
+            const int maxBorderY = mvImagePyramid[level].rows;
+
+            vector<cv::KeyPoint> vToDistributeKeys;
+            vToDistributeKeys.reserve(nfeatures*2);
+
+            // level, iobject
+            DetectedObject currentObject = objectPyramid[level][iObject];
+            float iniX = currentObject.bounding_box.x;
+            float iniY = currentObject.bounding_box.y;
+            float maxX = currentObject.bounding_box.x + currentObject.bounding_box.width;
+            float maxY = currentObject.bounding_box.y + currentObject.bounding_box.height;
+            vector<cv::KeyPoint> vKeysCell;
+            FAST(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX),
+                 vKeysCell,iniThFAST,true);
+            if(vKeysCell.empty())
+            {
+                FAST(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX),
+                     vKeysCell,minThFAST,true);
+            }
+
+            if(!vKeysCell.empty())
+            {
+                for(vector<cv::KeyPoint>::iterator vit=vKeysCell.begin(); vit!=vKeysCell.end();vit++)
+                {
+                    (*vit).pt.x+=iniX;
+                    (*vit).pt.y+=iniY;
+                    (*vit).class_id = currentObject.object_class;
+                    vToDistributeKeys.push_back(*vit);
+                }
+            }
+
+            vector<KeyPoint> & keypoints = allKeypointsOneObject[level];
+            keypoints.reserve(nfeatures);
+            keypoints = DistributeOctTree(vToDistributeKeys, minBorderX, maxBorderX,
+                                          minBorderY, maxBorderY,mnFeaturesPerLevel[level], level);
+
+            const int scaledPatchSize = PATCH_SIZE*mvScaleFactor[level];
+
+            // Add border to coordinates and scale information
+            const int nkps = keypoints.size();
+            for(int i=0; i<nkps ; i++)
+            {
+                keypoints[i].octave=level;
+                keypoints[i].size = scaledPatchSize;
+            }
+
+        }
+        computeDescripter(allKeypointsOneObject, _currentKeypointsIn, _currentDescriptorsIn);
+    }
+
+}
+
 void ORBextractor::ComputeKeyPointsOctTreeWithInObject(std::vector<std::vector<DetectedObject>> &objectPyramid,
                                                        std::vector<KeyPoint> &_keypointsIn,
                                                        OutputArray _descriptorsIn)
@@ -1301,6 +1401,7 @@ void ORBextractor::ComputeKeyPointsOctTreeWithInObject(std::vector<std::vector<D
         vector<cv::KeyPoint> vToDistributeKeys;
         vToDistributeKeys.reserve(nfeatures*10);
 
+        // extracte FAST features in different objects
         for(size_t iobject = 0; iobject < objectPyramid[level].size(); iobject++)
         {
             DetectedObject currentObject = objectPyramid[level][iobject];
@@ -1332,7 +1433,6 @@ void ORBextractor::ComputeKeyPointsOctTreeWithInObject(std::vector<std::vector<D
 
         vector<KeyPoint> & keypoints = allKeypoints[level];
         keypoints.reserve(nfeatures);
-
         keypoints = DistributeOctTree(vToDistributeKeys, minBorderX, maxBorderX,
                                       minBorderY, maxBorderY,mnFeaturesPerLevel[level], level);
 
@@ -1464,7 +1564,6 @@ void ORBextractor::computeDescripter(std::vector<std::vector<KeyPoint> > &allKey
                                      OutputArray& _descriptors)
 {
     Mat descriptors;
-
     int nkeypoints = 0;
     for (int level = 0; level < nlevels; ++level)
         nkeypoints += (int)allKeypoints[level].size();
