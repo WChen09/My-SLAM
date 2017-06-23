@@ -1,4 +1,6 @@
 #include "ObjectTracker.h"
+#include <thread>
+#include <chrono>
 
 // ORB Extractor parameters
 const int nFeatures = 1000;
@@ -27,7 +29,8 @@ ObjectTracker::ObjectTracker(const float maxdistTh, const Size frameSize_): dist
 
     imgStorePath = "./result.avi";
 
-    extractor = new ORB_SLAM2::ORBextractor(nFeatures, scaleFactor, nLevels, iniFAST, minThFAST);
+    extractorIn = new ORB_SLAM2::ORBextractor(nFeatures, scaleFactor, nLevels, iniFAST, minThFAST);
+    extractorOut = new ORB_SLAM2::ORBextractor(nFeatures*2, scaleFactor, nLevels, iniFAST, minThFAST);
 
     matcher = new ORB_SLAM2::ORBmatcher(0.8);
 
@@ -46,13 +49,23 @@ ObjectTracker::~ObjectTracker()
 {
 
     delete APS;
-    delete extractor;
+    delete extractorIn;
+    delete extractorOut;
     delete matcher;
     delete vframeObjectWithIdpair;
     delete writeFrame;
     delete assignment;
     delete vDistance;
     delete vframeObjectORBpair;
+
+}
+void ObjectTracker::ExtractORB(int flag, const Mat &im, const std::vector<DetectedObject> vCurrentObjects)
+{
+    if(flag == 0)
+        (*extractorOut)(im, cv::Mat(), kpsOut, descriptorsOut, vCurrentObjects, 0);
+    else
+        (*extractorIn)(im, cv::Mat(), kpsIn, descriptorsIn, vCurrentObjects, 1);
+
 
 }
 
@@ -63,13 +76,28 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
     cv::Mat greyFrame;
     cvtColor(frame, greyFrame, CV_RGB2GRAY);
 
-    std::vector<cv::KeyPoint> kpsIn;
-    cv::Mat descriptorsIn;
-    std::vector<cv::KeyPoint> kpsOut;
-    cv::Mat descriptorsOut;
 
 //    extractor->extracteORBInObject(greyFrame, cv::Mat(), kpsIn, descriptorsIn, vCurrentObjects);
-    (*extractor)(greyFrame, cv::Mat(), kpsOut, descriptorsOut, kpsIn, descriptorsIn, vCurrentObjects);
+    std::chrono::steady_clock::time_point t0 = std::chrono::steady_clock::now();
+    std::thread inThread(&ObjectTracker::ExtractORB, this, 1, greyFrame, vCurrentObjects);
+    std::thread outThread(&ObjectTracker::ExtractORB, this, 0, greyFrame, vCurrentObjects);
+
+    outThread.join();
+    inThread.join();
+    std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
+    std::cout << "AllBox " << std::chrono::duration_cast<std::chrono::duration<double> >(t1 - t0).count() << " seconds." << std::endl;
+
+
+//    std::chrono::steady_clock::time_point t0 = std::chrono::steady_clock::now();
+//    ExtractORB(1, greyFrame, vCurrentObjects);
+//    std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
+//    ExtractORB(0, greyFrame, vCurrentObjects);
+//    std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
+
+//    std::cout << "InBox " << std::chrono::duration_cast<std::chrono::duration<double> >(t1 - t0).count() << " seconds." << std::endl
+//              << "OutBox " << std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count() << " seconds." << std::endl << std::endl;
+
+
 
     DrawKpsWithinObject(frame, kpsIn, kpsOut);
 

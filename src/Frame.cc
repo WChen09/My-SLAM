@@ -284,9 +284,9 @@ void Frame::ExtractORB(int flag, const cv::Mat &im)
 void Frame::ExtractORBObject(int flag, const cv::Mat &im, const std::vector<DetectedObject> &detected)
 {
     if(flag==0)
-        (*mpORBextractorLeft)(im,cv::Mat(),mvKeys,mDescriptors, detected);
+        (*mpORBextractorLeft)(im,cv::Mat(),mvKeys,mDescriptors, detected, 0);
     else
-        (*mpORBextractorRight)(im,cv::Mat(),mvKeysRight,mDescriptorsRight, detected);
+        (*mpORBextractorRight)(im,cv::Mat(),mvKeysRight,mDescriptorsRight, detected, 0);
 }
 
 void Frame::SetPose(cv::Mat Tcw)

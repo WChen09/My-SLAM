@@ -33,13 +33,22 @@ public:
     void CutInBiggestBox(vObjects& vObjects_, cv::Rect& FrameBox);
 
 protected:
+
+    std::vector<cv::KeyPoint> kpsIn;
+    cv::Mat descriptorsIn;
+    std::vector<cv::KeyPoint> kpsOut;
+    cv::Mat descriptorsOut;
+
+    void ExtractORB(int flag, const cv::Mat &im, const std::vector<DetectedObject> vCurrentObjects);
+
     //config parameters
     const float dist_thres;
     const cv::Size frameSize;
     long unsigned int frameId;
     long unsigned int trackId;
 
-    ORB_SLAM2::ORBextractor* extractor;
+    ORB_SLAM2::ORBextractor* extractorIn;
+    ORB_SLAM2::ORBextractor* extractorOut;
     ORB_SLAM2::ORBmatcher* matcher;
 
     // Record overall Box information

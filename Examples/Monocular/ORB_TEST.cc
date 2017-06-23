@@ -95,7 +95,7 @@ int main(int argc, char **argv)
 
         //cost the same time ~ 0.0770s
         std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
-        (*pORBextractorLeft)(imGray, cv::Mat(), vKeys, Descriptors, objects);
+        (*pORBextractorLeft)(imGray, cv::Mat(), vKeys, Descriptors, objects, 0);
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
         (*pORBextractorOrigin)(imGray, cv::Mat(), vKeysOrigin, DescriptorsOrigin);
         std::chrono::steady_clock::time_point t3 = std::chrono::steady_clock::now();
