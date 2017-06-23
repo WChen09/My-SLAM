@@ -23,16 +23,15 @@ ObjectTracker::ObjectTracker(const float maxdistTh, const Size frameSize_): dist
     frameId = 0;
     trackId = 0;
 
-    frameObject = new std::vector<std::pair<int, vObjects>>();
-    frameObjectID = new std::vector<std::pair<int, std::vector<int>>>();
+    vframeObjectWithIdpair = new std::vector<std::pair<vObjects, std::vector<int>>>();
 
     imgStorePath = "./result.avi";
 
-    detector = new ORB_SLAM2::ORBextractor(nFeatures, scaleFactor, nLevels, iniFAST, minThFAST);
+    extractor = new ORB_SLAM2::ORBextractor(nFeatures, scaleFactor, nLevels, iniFAST, minThFAST);
 
     matcher = new ORB_SLAM2::ORBmatcher(0.8);
 
-
+    vframeObjectORBpair = new std::vector<std::pair<std::vector<cv::KeyPoint>, cv::Mat>>();
 
     writeFrame = new cv::VideoWriter();
 
@@ -45,17 +44,32 @@ ObjectTracker::ObjectTracker(const float maxdistTh, const Size frameSize_): dist
 
 ObjectTracker::~ObjectTracker()
 {
+
     delete APS;
-    delete detector;
+    delete extractor;
     delete matcher;
-    delete frameObject;
-    delete frameObjectID;
+    delete vframeObjectWithIdpair;
     delete writeFrame;
+    delete assignment;
+    delete vDistance;
+    delete vframeObjectORBpair;
+
 }
 
 void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
 {
     vnCurrentTrackObjectID = new std::vector<int>(vCurrentObjects.size(), -1);
+
+    cv::Mat greyFrame;
+    cvtColor(frame, greyFrame, CV_RGB2GRAY);
+
+    std::vector<cv::KeyPoint> kps;
+    cv::Mat descriptors;
+
+    extractor->extracteORBInObject(greyFrame, cv::Mat(), kps, descriptors, vCurrentObjects);
+
+    DrawKpsWithinObject(frame, kps);
+
 
     if(frameId == 0)
     {
@@ -69,10 +83,8 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
         }
 
         // store current frame information
-        auto p1 = std::make_pair(frameId, mvlastDetecedBox);
-        auto p2 = std::make_pair(frameId, mvnLastTrackObjectID);
-        frameObject->push_back(p1);
-        frameObjectID->push_back(p2);
+        auto p1 = std::make_pair(mvlastDetecedBox, mvnLastTrackObjectID);
+        vframeObjectWithIdpair->push_back(p1);
 
         DrawDetector(frame, vCurrentObjects, *vnCurrentTrackObjectID);
 
@@ -165,10 +177,8 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
 
 
     // store current frame information
-    auto p1 = std::make_pair(frameId, mvlastDetecedBox);
-    auto p2 = std::make_pair(frameId, mvnLastTrackObjectID);
-    frameObject->push_back(p1);
-    frameObjectID->push_back(p2);
+    auto p1 = std::make_pair(mvlastDetecedBox, mvnLastTrackObjectID);
+    vframeObjectWithIdpair->push_back(p1);
 
     if (writeFrame->isOpened())
         *writeFrame << frame;

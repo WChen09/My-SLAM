@@ -21,8 +21,8 @@ void LoadImages_robotcar(const string &strSequence, vector<string> &vstrImageFil
 int main(int argc, char **argv)
 {
     if(argc < 3) {
-        cerr << "Usage: " << endl <<
-                "./ObjectTracking img_Path YOLO_cfg_path" << endl;
+        std::cerr << "Usage: " << std::endl <<
+                "./ObjectTracking img_Path YOLO_cfg_path" << std::endl;
         return 1;
     }
 

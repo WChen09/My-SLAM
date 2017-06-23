@@ -39,12 +39,12 @@ protected:
     long unsigned int frameId;
     long unsigned int trackId;
 
-    ORB_SLAM2::ORBextractor* detector;
+    ORB_SLAM2::ORBextractor* extractor;
     ORB_SLAM2::ORBmatcher* matcher;
 
     // Record overall Box information
-    std::vector<std::pair<int, vObjects>>* frameObject;
-    std::vector<std::pair<int, std::vector<int>>>* frameObjectID;
+    std::vector<std::pair<vObjects, std::vector<int>>>* vframeObjectWithIdpair;
+    std::vector<std::pair<std::vector<cv::KeyPoint>, cv::Mat>>* vframeObjectORBpair;
 
     // Record last frame's box information
     vObjects mvlastDetecedBox;

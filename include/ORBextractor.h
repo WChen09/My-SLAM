@@ -65,6 +65,11 @@ public:
                     cv::OutputArray _descriptors,
                     std::vector<DetectedObject> objects);
 
+    void extracteORBInObject(cv::InputArray _image, cv::InputArray _mask,
+                             std::vector<cv::KeyPoint>& _keypoints,
+                             cv::OutputArray _descriptors,
+                             std::vector<DetectedObject> objects);
+
     int inline GetLevels(){
         return nlevels;}
 
@@ -116,7 +121,8 @@ protected:
 
     void ComputeObjectPyramid(std::vector<DetectedObject> objects, std::vector<std::vector<DetectedObject> > &objectPyramid);
     void showObjectInPyramid(std::vector<std::vector<DetectedObject>> &objectPyramid_);
-    void ComputeKeyPointsOctTreeObject(std::vector<std::vector<cv::KeyPoint> >& allKeypoints, std::vector<std::vector<DetectedObject> > &objectPyramid);
+    void ComputeKeyPointsOctTreeWithoutObject(std::vector<std::vector<cv::KeyPoint> >& allKeypoints, std::vector<std::vector<DetectedObject> > &objectPyramid);
+    void ComputeKeyPointsOctTreeWithInObject(std::vector<std::vector<cv::KeyPoint> >& allKeypoints, std::vector<std::vector<DetectedObject> > &objectPyramid);
     bool gridInObjectBox(std::vector<DetectedObject> &objectPyramid, cv::Rect grid, float areaTh);
 };
 
