@@ -35,10 +35,10 @@ public:
 
 protected:
 
-    std::vector<cv::KeyPoint> kpsIn;
-    cv::Mat descriptorsIn;
-    std::vector<cv::KeyPoint> kpsOut;
-    cv::Mat  descriptorsOut;
+    std::vector<cv::KeyPoint> *kpsIn;
+    cv::Mat *descriptorsIn;
+    std::vector<cv::KeyPoint> *kpsOut;
+    cv::Mat  *descriptorsOut;
 
     std::vector<std::vector<cv::KeyPoint>>* vkpsInObject;
     std::vector<cv::Mat>* vdescriptorsInObject;
@@ -48,11 +48,21 @@ protected:
 
     void reorganizeORB(std::vector<KeyPoint> KpsIn, cv::Mat descriptorsIn, std::vector<DetectedObject> ObjectBox);
 
+    size_t Objectmatcher(cv::Mat lastDescriptor, cv::Mat currentDescrptor,
+                         std::vector<cv::KeyPoint> vLastKps,
+                         std::vector<cv::KeyPoint> vCurrentKps,
+                         std::vector<cv::KeyPoint>& match1,
+                         std::vector<cv::KeyPoint>& match2, string step);
+
     //config parameters
-    const float dist_thres;
+    const float maxDistThres;
+    const float minDistThres;
     const cv::Size frameSize;
     long unsigned int frameId;
     long unsigned int trackId;
+    const double  nn_match_ratio;
+    const double ransac_thresh; // RANSAC inlier threshold
+    const int min_inliers;
 
     ORB_SLAM2::ORBextractor* extractorIn;
     ORB_SLAM2::ORBextractor* extractorOut;
@@ -60,9 +70,13 @@ protected:
     cv::Ptr<cv::DescriptorMatcher> matcher;
 
     // Record overall Box information
-    std::vector<std::pair<vObjects, std::vector<int>>>* vframeObjectWithIdpair;
     std::vector<std::pair<std::vector<std::vector<cv::KeyPoint>>, std::vector<cv::Mat>>>* vframeInObjectORBpair;
     std::vector<std::pair<std::vector<cv::KeyPoint>, cv::Mat>>* vframeOutObjectORBpair;
+
+    // Record descriptors and kps for every objects, no more than 10 objects
+    std::vector<std::pair<int, std::pair<std::vector<cv::KeyPoint>, cv::Mat>>>* mvObjectBag; // ith object with Kps and Descriptors
+    std::vector<int>* mvObjectObservedTimes; // record the times of observing ith object
+    std::vector<int>* mvObjectUnobservedTimes; //record the times of unobserving ith object
 
     // Record last frame's box information
     vObjects mvlastDetecedBox;

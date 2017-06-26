@@ -146,13 +146,13 @@ void DrawKpsWithinObject(cv::Mat& frame, std::vector<std::vector<cv::KeyPoint>> 
             cv::rectangle(frame,pt1,pt2,cv::Scalar(255,0,0));//magenta color
             cv::circle(frame,KPsIn[iobject][i].pt,2,cv::Scalar(255,0,0),-1);
         }
-
-
     }
 
 
     for(size_t i = 0; i < KPsOut.size(); i++)
     {
+        if(KPsOut.at(i).class_id != -1)
+            continue;
         cv::Point2f pt1,pt2;
         pt1.x=KPsOut[i].pt.x-r;
         pt1.y=KPsOut[i].pt.y-r;

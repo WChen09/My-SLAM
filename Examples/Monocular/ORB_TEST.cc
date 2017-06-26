@@ -175,6 +175,7 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>
+#include <chrono>
 
 #include "stats.h" // Stats structure definition
 #include "utils.h" // Drawing and printing functions
