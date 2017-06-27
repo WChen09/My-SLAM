@@ -29,7 +29,7 @@ int main(int argc, char **argv)
     Yolo yolo;
     yolo.readConfig(argv[2]);
 
-    float maxdistTh = 0.7;
+    float maxdistTh = 0.9;
     cv::Size imgSize(1280, 960);
     ObjectTracker* track = new ObjectTracker(maxdistTh, imgSize);
 

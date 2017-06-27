@@ -1,16 +1,16 @@
 #include "ObjectTracker.h"
 #include <thread>
 #include <chrono>
-
+#include <nms.h>
 // ORB Extractor parameters
-const int nFeatures = 800;
+const int nFeatures = 2000;
 const float scaleFactor = 1.2;
 const int nLevels = 8;
 const int iniFAST = 20;
 const int minThFAST = 2;
 
 ObjectTracker::ObjectTracker(const float maxdistTh, const Size frameSize_): maxDistThres(maxdistTh), minDistThres(0.5), frameSize(frameSize_),
-    nn_match_ratio(0.8f), ransac_thresh(2.5f), min_inliers(10)
+    nn_match_ratio(0.9f), ransac_thresh(2.5f), minInliersTh(0.3)
 {
     initObject = new DetectedObject(-1, -1, cv::Rect(0, 0, 0, 0));
     size_t MaxObjects = 10;
@@ -28,9 +28,6 @@ ObjectTracker::ObjectTracker(const float maxdistTh, const Size frameSize_): maxD
 
     imgStorePath = "./result.avi";
 
-    extractorIn = new ORB_SLAM2::ORBextractor(nFeatures, scaleFactor, nLevels, iniFAST, minThFAST);
-    extractorOut = new ORB_SLAM2::ORBextractor(nFeatures*2, scaleFactor, nLevels, iniFAST, minThFAST);
-
     matcher = DescriptorMatcher::create("BruteForce-Hamming");
 
     vframeInObjectORBpair = new std::vector<std::pair<std::vector<std::vector<cv::KeyPoint>>, std::vector<cv::Mat>>>();
@@ -43,13 +40,13 @@ ObjectTracker::ObjectTracker(const float maxdistTh, const Size frameSize_): maxD
         writeFrame->open(imgStorePath, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), 10, frameSize, true);
     }
 
-    mvObjectBag = new std::vector<std::pair<int, std::pair<std::vector<cv::KeyPoint>, cv::Mat>>>(20);
+    mvObjectBag = new std::vector<std::pair<int, std::pair<std::vector<cv::KeyPoint>, cv::Mat>>>(10);
     for(size_t i = 0; i < mvObjectBag->size(); i++)
     {
         mvObjectBag->at(i).first = -1;
     }
-    mvObjectObservedTimes = new std::vector<int>(20, -1);
-    mvObjectUnobservedTimes = new std::vector<int>(20, -1);
+    mvObjectObservedTimes = new std::vector<int>(10, -1);
+    mvObjectUnobservedTimes = new std::vector<int>(10, -1);
 }
 
 ObjectTracker::~ObjectTracker()
@@ -59,11 +56,20 @@ ObjectTracker::~ObjectTracker()
     delete extractorIn;
     delete extractorOut;
     delete matcher;
+    delete initObject;
     delete writeFrame;
     delete assignment;
     delete vDistance;
     delete vframeInObjectORBpair;
     delete vframeOutObjectORBpair;
+
+    delete vkpsInObject;
+    delete vdescriptorsInObject;
+
+    delete kpsIn;
+    delete kpsOut;
+    delete descriptorsIn;
+    delete descriptorsOut;
 
     delete mvObjectBag;
     delete mvObjectObservedTimes;
@@ -71,18 +77,32 @@ ObjectTracker::~ObjectTracker()
 }
 void ObjectTracker::ExtractORB(int flag, const Mat &im, const std::vector<DetectedObject> vCurrentObjects)
 {
+    float sumArea = 0;
+    for(size_t i = 0; i < vCurrentObjects.size(); i++)
+    {
+        sumArea += vCurrentObjects.at(i).bounding_box.area();
+    }
+    float areaRatio = sumArea/(float)(im.cols * im.rows);
+    int nFeaturesIn = cvRound(nFeatures * areaRatio);
+    int nFeaturesOut = nFeatures - nFeaturesIn;
+
     if(flag == 0)
     {
+        extractorOut = new ORB_SLAM2::ORBextractor(nFeaturesOut, scaleFactor, nLevels, iniFAST, minThFAST);
         kpsOut = new std::vector<cv::KeyPoint>();
         descriptorsOut = new cv::Mat();
         (*extractorOut)(im, cv::Mat(), *kpsOut, *descriptorsOut, vCurrentObjects, 0);
+        delete extractorOut;
     }
     else
     {
+        extractorIn = new ORB_SLAM2::ORBextractor(nFeaturesIn, scaleFactor, nLevels, iniFAST, minThFAST);
         kpsIn = new std::vector<cv::KeyPoint>();
         descriptorsIn = new cv::Mat();
         (*extractorIn)(im, cv::Mat(), *kpsIn, *descriptorsIn, vCurrentObjects, 1);
+        delete extractorIn;
     }
+
 }
 
 void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
@@ -143,8 +163,10 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
         frameId++;
 
         delete vnCurrentTrackObjectID;
+
         delete vkpsInObject;
         delete vdescriptorsInObject;
+
         delete kpsIn;
         delete kpsOut;
         delete descriptorsIn;
@@ -164,16 +186,12 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
         vDistance = new std::vector<float>(N*M);
         assignment = new std::vector<int>(N,-1);
 
-        float maxDist = 0;
-
         for(size_t i = 0; i < N; i++)
         {
             for(size_t j = 0; j < M; j++)
             {
                 float dist =  CalcDistJaccard(vCurrentObjects.at(j).bounding_box, mvlastDetecedBox[i].bounding_box);
                 vDistance->at(i + j * N) = dist;
-                if(dist > maxDist)
-                    maxDist = dist;
             }
         }
 
@@ -196,15 +214,8 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
             }
         }
 
-        //        std::vector<int> assignment = CalculateAssignment(lastDetecedBox, currentDetectedBox);
-        for(size_t i = 0; i < assignment->size(); i++)
-        {
-            if(assignment->at(i)!=-1)
-                vnCurrentTrackObjectID->at(assignment->at(i)) = mvnLastTrackObjectID[i];
-        }
-
         // -----------------------------------
-        // 2.2. use ORB Matcher recheck, if nmatches < 20, clean such assignment
+        // 2.2. use ORB Matcher recheck, if ratio < minInliersTh, clean such assignment
         // -----------------------------------
 
         std::cout << std::endl << "2.2 ORB matcher recheck: " << std::endl;
@@ -222,19 +233,31 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
             std::vector<cv::KeyPoint> currentiObjectKPs = vkpsInObject->at(assignment->at(i));
             cv::Mat currentiObjectDescriptors = vdescriptorsInObject->at(assignment->at(i));
             vector<KeyPoint> matched1, matched2;
-            size_t nmatches = Objectmatcher(lastiObjectDescriptors, currentiObjectDescriptors, lastiObjectKPs, currentiObjectKPs, matched1, matched2, "2.2.0");
-
-            if(nmatches <= min_inliers)
+            size_t nInliers=0;
+            float ratio = Objectmatcher(lastiObjectDescriptors, currentiObjectDescriptors, lastiObjectKPs, currentiObjectKPs, matched1, matched2, "2.2.0", nInliers);
+            if(nInliers > 20)
+                continue;
+            if(ratio <= minInliersTh * 0.8)
                 assignment->at(i) = -1;
         }
+
+        for(size_t i = 0; i < assignment->size(); i++)
+        {
+            if(assignment->at(i)!=-1)
+                vnCurrentTrackObjectID->at(assignment->at(i)) = mvnLastTrackObjectID[i];
+        }
+
 
         // -----------------------------------
         // 2.3. use ORB Matcher refind, if nmatches < 20, continue:
         // 2.3.1 firstly find in the current unassigned objects;
-        // 2.3.2 if not find, then using last object box(with position in frame) to construct the current KPs vector, then use ORB matcher:
-        // 2.3.3 finally, find match in the bag of objects
+        // 2.3.2 finally, find match in the bag of objects
+        // 2.3.3 if not find, then using last object box(with position in frame) to construct the current KPs vector, then use ORB matcher:
+        // 2.3.4 nms
         // -----------------------------------
 
+//         2.3.1 the current unassigned objects
+        std::cout << "2.3.1 " << std::endl;
         for(size_t i = 0; i < assignment->size(); i++)
         {
             if(assignment->at(i) != -1)
@@ -243,11 +266,7 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
             std::vector<cv::KeyPoint>  ivlastKPsObjects = vKPsObjects.at(i);
             cv::Mat ilastDescriptors = vdescriptorsObjects.at(i);
 
-            bool matched = false;
-            int matchedID = -1;
 
-            // 2.3.1 the current unassigned objects
-            std::cout << "2.3.1 " << std::endl;
             for(size_t icurrentObject = 0; icurrentObject < vkpsInObject->size(); icurrentObject++)
             {
                 if(vnCurrentTrackObjectID->at(icurrentObject) != -1)
@@ -257,25 +276,75 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
                 cv::Mat currentObjectDescriptors = vdescriptorsInObject->at(icurrentObject);
 
                 vector<KeyPoint> matched1, matched2;
-
-                size_t nmatchs = Objectmatcher(ilastDescriptors, currentObjectDescriptors, ivlastKPsObjects, ivcurrentKPsObjects, matched1, matched2, "2.3.1");
-
-                if(nmatchs <= min_inliers)
+                size_t nInliers=0;
+                float ratio = Objectmatcher(ilastDescriptors, currentObjectDescriptors, ivlastKPsObjects, ivcurrentKPsObjects, matched1, matched2, "2.3.1", nInliers);
+                if( ratio <= minInliersTh*0.8)
                     continue;
                 else
                 {
-                    matched =true;
-                    matchedID = (int)icurrentObject;
-                    assignment->at(i) = matchedID;
+                    assignment->at(i) = (int)icurrentObject;
                     vnCurrentTrackObjectID->at(icurrentObject) = mvnLastTrackObjectID[i];
                     break;
                 }
             }
-
-            if(matched)
+        }
+        // 2.3.2 track in the bag of objects
+        std::cout << "2.3.2 " << std::endl;
+        std::vector<bool> hasBeenMatched(mvObjectBag->size(), false);
+//        no more than 1 object with same id in current frame
+        for(size_t i = 0; i < vnCurrentTrackObjectID->size(); i++)
+        {
+            if(vnCurrentTrackObjectID->at(i)==-1)
                 continue;
-            // 2.3.2 if not find in the current objects, then find the zone near the last box
-            std::cout << "2.3.2 " << std::endl;
+            for(size_t j = 0; j < mvObjectBag->size(); j++)
+            {
+                if(mvObjectObservedTimes->at(j) <=0 )
+                    continue;
+                if(mvObjectBag->at(j).first == vnCurrentTrackObjectID->at(i))
+                {
+                    hasBeenMatched.at(j) = true;
+                    continue;
+                }
+            }
+        }
+
+        for(size_t i = 0; i < vnCurrentTrackObjectID->size(); i++)
+        {
+            if(vnCurrentTrackObjectID->at(i) != -1)
+                continue;
+            for(size_t j = 0; j < mvObjectBag->size(); j++)
+            {
+                if(hasBeenMatched.at(j) || mvObjectObservedTimes->at(j) == -1)
+                    continue;
+                std::pair<std::vector<cv::KeyPoint>, cv::Mat> iObjectORB = mvObjectBag->at(j).second;
+                std::vector<cv::KeyPoint> iObjectKps = iObjectORB.first;
+                cv::Mat iObjectDes = iObjectORB.second;
+                int ObjectId = mvObjectBag->at(j).first;
+
+                vector<KeyPoint> matched1, matched2;
+                size_t nInliers=0;
+                float ratio = Objectmatcher(iObjectDes, vdescriptorsInObject->at(i), iObjectKps, vkpsInObject->at(i), matched1, matched2, "2.3.2", nInliers);
+                if( ratio <= minInliersTh*0.8)
+                    continue;
+                else
+                {
+                    vnCurrentTrackObjectID->at(i) = ObjectId;
+                    hasBeenMatched.at(j) = true;
+                    break;
+                }
+            }
+        }
+
+        // 2.3.3 if not find in the current objects, then find the zone near the last box
+        std::cout << "2.3.3 " << std::endl;
+        for(size_t i = 0; i < assignment->size(); i++)
+        {
+            if(assignment->at(i) != -1)
+                continue;
+
+            std::vector<cv::KeyPoint>  ivlastKPsObjects = vKPsObjects.at(i);
+            cv::Mat ilastDescriptors = vdescriptorsObjects.at(i);
+
             DetectedObject lastObjectNoMatched = mvlastDetecedBox[i];
             cv::Rect lastBox = lastObjectNoMatched.bounding_box;
             int classId = lastObjectNoMatched.object_class;
@@ -293,23 +362,36 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
                     ivcurrentKPsObjects.push_back(kpsOut->at(iKpsOut));
                 }
             }
+            size_t outSize = findKPsId.size();
+            for(size_t i = 0; i < kpsIn->size(); i++)
+            {
+                if(!lastBox.contains(kpsIn->at(i).pt))
+                    continue;
+                else
+                {
+                    findKPsId.push_back(i);
+                    kpsIn->at(i).class_id = classId;
+                    ivcurrentKPsObjects.push_back(kpsIn->at(i));
+                }
+            }
 
             cv::Mat currentObjectDescriptor = cv::Mat::zeros((int)findKPsId.size(), 32, CV_8UC1);
 
             for(size_t i = 0; i < findKPsId.size(); i++)
             {
-                descriptorsOut->row(findKPsId.at(i)).copyTo(currentObjectDescriptor.row(i));
+                if(i < outSize)
+                    descriptorsOut->row(findKPsId.at(i)).copyTo(currentObjectDescriptor.row(i));
+                else
+                    descriptorsIn->row(findKPsId.at(i)).copyTo(currentObjectDescriptor.row(i));
             }
 
             vector<KeyPoint> matched1, matched2;
-
-            size_t nmatchs = Objectmatcher(ilastDescriptors, currentObjectDescriptor, ivlastKPsObjects, ivcurrentKPsObjects, matched1, matched2, "2.3.2");
-
-            if(nmatchs <= min_inliers)
+            size_t nInliers=0;
+            float ratio = Objectmatcher(ilastDescriptors, currentObjectDescriptor, ivlastKPsObjects, ivcurrentKPsObjects, matched1, matched2, "2.3.3", nInliers);
+            if( ratio <= minInliersTh*0.8)
                 continue;
             else
             {
-                matched = true;
                 vCurrentObjects.push_back(lastObjectNoMatched);
                 vkpsInObject->push_back(ivcurrentKPsObjects);
                 vdescriptorsInObject->push_back(currentObjectDescriptor);
@@ -318,42 +400,48 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
                 break;
             }
         }
-        // 2.3.3 track in the bag of objects
-        std::cout << "2.3.3 " << std::endl;
-        std::vector<bool>* hasBeenMatched = new std::vector<bool>(mvObjectBag->size(), false);
-        for(size_t i = 0; i < vnCurrentTrackObjectID->size(); i++)
-        {
-            if(vnCurrentTrackObjectID->at(i) != -1)
-                continue;
-
-            for(size_t j = 0; j < mvObjectBag->size(); j++)
-            {
-                if(hasBeenMatched->at(j) || mvObjectObservedTimes->at(j) == -1)
-                    continue;
-                std::pair<std::vector<cv::KeyPoint>, cv::Mat> iObjectORB = mvObjectBag->at(j).second;
-                std::vector<cv::KeyPoint> iObjectKps = iObjectORB.first;
-                cv::Mat iObjectDes = iObjectORB.second;
-                int ObjectId = mvObjectBag->at(j).first;
-
-                vector<KeyPoint> matched1, matched2;
-                size_t nmatchs = Objectmatcher(iObjectDes, vdescriptorsInObject->at(i), iObjectKps, vkpsInObject->at(i), matched1, matched2, "2.3.3");
-
-                if(nmatchs <= min_inliers)
-                    continue;
-                else
-                {
-                    vnCurrentTrackObjectID->at(i) = ObjectId;
-                    hasBeenMatched->at(j) = true;
-                    break;
-                }
-            }
-        }
         delete vDistance;
         delete assignment;
     }
 
-    // 3. add new track to objectBag
+    // 2.3.4 nms - remove the wrong adding in 2.3.3
+    std::vector<cv::Rect> objectRects, resRects;
+    std::vector<float> scores;
+    float overlopTh = 0.7;
+    for(size_t i = 0; i < vCurrentObjects.size(); i++)
+    {
+        objectRects.push_back(vCurrentObjects.at(i).bounding_box);
+        scores.push_back(vCurrentObjects.at(i).prob);
+    }
+    nms2(objectRects, scores, resRects, overlopTh);
+    std::vector<size_t> idx;
+    if(resRects.size() < vCurrentObjects.size())
+    {
+        std::vector<bool> bfind(vCurrentObjects.size(), false);
+        for(size_t i_ = 0; i_ < vCurrentObjects.size(); i_++)
+        {
+            for(size_t j = 0; j < resRects.size(); j++)
+            {
+                if(CalcDistJaccard(vCurrentObjects.at(i_).bounding_box, resRects.at(j)) == 0)
+                {
+                    bfind.at(i_) = true;
+                    break;
+                }
+            }
+            if(!bfind.at(i_))
+                idx.push_back(i_);
+        }
+        // exit bug
+        for(size_t k = 0; k < idx.size(); k++)
+        {
+            vCurrentObjects.erase(vCurrentObjects.begin()+idx.at(k));
+            vkpsInObject->erase(vkpsInObject->begin() + idx.at(k));
+            vdescriptorsInObject->erase(vdescriptorsInObject->begin() + idx.at(k));
+            vnCurrentTrackObjectID->erase(vnCurrentTrackObjectID->begin() + idx.at(k));
+        }
+    }
 
+    // 3. add new track to objectBag
     for(size_t icurrentTrack = 0; icurrentTrack < vCurrentObjects.size(); icurrentTrack++)
     {
         if(vnCurrentTrackObjectID->at(icurrentTrack) == -1)
@@ -369,7 +457,8 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
                 {
                     if(mvObjectObservedTimes->at(ith) != -1)
                         continue;
-                    mvObjectObservedTimes->at(ith) = 1;
+                    mvObjectObservedTimes->at(ith) = 0;
+                    mvObjectUnobservedTimes->at(ith) = 0;
                     auto ORBInfo = std::make_pair(vkpsInObject->at(icurrentTrack), vdescriptorsInObject->at(icurrentTrack));
                     auto ObjectORBwithId = std::make_pair(vnCurrentTrackObjectID->at(icurrentTrack), ORBInfo);
                     mvObjectBag->at(ith) = ObjectORBwithId;
@@ -419,6 +508,8 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
     std::vector<bool>* hasBeenDealed = new std::vector<bool>(vCurrentObjects.size(), false);
     for(size_t iObjectInBag = 0; iObjectInBag < mvObjectBag->size(); iObjectInBag++)
     {
+        if(mvObjectObservedTimes->at(iObjectInBag) == -1)
+            continue;
         bool unObserved = false;
         int idInBag = mvObjectBag->at(iObjectInBag).first;
         for(size_t iCurrent = 0; iCurrent < vnCurrentTrackObjectID->size(); iCurrent++)
@@ -442,7 +533,16 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
         if(unObserved)
             mvObjectUnobservedTimes->at(iObjectInBag) += 1;
     }
+    // if unobserved times > 3, remove it
+    for(size_t iUnOb = 0; iUnOb < mvObjectUnobservedTimes->size(); iUnOb++)
+    {
+        if(mvObjectUnobservedTimes->at(iUnOb) >= 5)
+        {
+            mvObjectObservedTimes->at(iUnOb) = -1;
+            mvObjectUnobservedTimes->at(iUnOb) = -1;
+        }
 
+    }
 
     if (writeFrame->isOpened())
         *writeFrame << frame;
@@ -567,12 +667,12 @@ void ObjectTracker::reorganizeORB(std::vector<KeyPoint> KpsIn, Mat descriptorsIn
 
 }
 
-size_t ObjectTracker::Objectmatcher(Mat lastDescriptor,
-                                    Mat currentDescrptor,
-                                    std::vector<cv::KeyPoint> vLastKps,
-                                    std::vector<cv::KeyPoint> vCurrentKps,
-                                    std::vector<KeyPoint> &match1,
-                                    std::vector<KeyPoint> &match2, string step)
+float ObjectTracker::Objectmatcher(Mat lastDescriptor,
+                                   Mat currentDescrptor,
+                                   std::vector<cv::KeyPoint> vLastKps,
+                                   std::vector<cv::KeyPoint> vCurrentKps,
+                                   std::vector<KeyPoint> &match1,
+                                   std::vector<KeyPoint> &match2, string step, size_t &nInliers)
 {
     std::chrono::steady_clock::time_point t7 = std::chrono::steady_clock::now();
 
@@ -597,13 +697,17 @@ size_t ObjectTracker::Objectmatcher(Mat lastDescriptor,
 
     if(match1.size() >= 8)
     {
-        Fundamental = findFundamentalMat(Points(match1), Points(match2), inlier_mask_F);
+        Fundamental = findFundamentalMat(Points(match1), Points(match2), FM_RANSAC, 2.5, 0.99, inlier_mask_F);
     }
 
-    if(match1.size() < 8) {
-        return 0;
+//    if(match1.size() < 8) {
+//        return 0;
+//    }
+    if(inlier_mask_F.cols * inlier_mask_F.rows == 0)
+    {
+         nInliers = 0;
+         return 0;
     }
-
 
     for(unsigned i = 0; i < match1.size(); i++) {
         if(inlier_mask_F.at<uchar>(i)) {
@@ -616,14 +720,22 @@ size_t ObjectTracker::Objectmatcher(Mat lastDescriptor,
 
     std::chrono::steady_clock::time_point t8 = std::chrono::steady_clock::now();
 
+    float ratio = (float)inliers1_F.size()/(float)std::min(vLastKps.size(), vCurrentKps.size());
+
     std::cout << step << ": match cost: "
               << std::chrono::duration_cast<std::chrono::duration<double>>(t8 - t7).count()
               << " seconds."
               << " nmatches: "
               << inliers1_F.size()
+              << " ratio: "
+              << ratio
               << std::endl;
 
-    return match1.size();
+    nInliers = inliers1_F.size();
+//    if(inliers1_F.size() < 8)
+//        return 0;
+
+    return ratio;
 
 
 

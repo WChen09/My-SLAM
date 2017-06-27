@@ -48,11 +48,11 @@ protected:
 
     void reorganizeORB(std::vector<KeyPoint> KpsIn, cv::Mat descriptorsIn, std::vector<DetectedObject> ObjectBox);
 
-    size_t Objectmatcher(cv::Mat lastDescriptor, cv::Mat currentDescrptor,
+    float Objectmatcher(cv::Mat lastDescriptor, cv::Mat currentDescrptor,
                          std::vector<cv::KeyPoint> vLastKps,
                          std::vector<cv::KeyPoint> vCurrentKps,
                          std::vector<cv::KeyPoint>& match1,
-                         std::vector<cv::KeyPoint>& match2, string step);
+                         std::vector<cv::KeyPoint>& match2, string step, size_t &nInliers);
 
     //config parameters
     const float maxDistThres;
@@ -62,7 +62,7 @@ protected:
     long unsigned int trackId;
     const double  nn_match_ratio;
     const double ransac_thresh; // RANSAC inlier threshold
-    const int min_inliers;
+    const float minInliersTh;
 
     ORB_SLAM2::ORBextractor* extractorIn;
     ORB_SLAM2::ORBextractor* extractorOut;
