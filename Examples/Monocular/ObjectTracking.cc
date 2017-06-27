@@ -30,7 +30,8 @@ int main(int argc, char **argv)
     yolo.readConfig(argv[2]);
 
     float maxdistTh = 0.9;
-    cv::Size imgSize(1280, 960);
+//    cv::Size imgSize(1280, 960);
+    cv::Size imgSize(1226, 370);
     ObjectTracker* track = new ObjectTracker(maxdistTh, imgSize);
 
     std::vector<string> vImagePath;

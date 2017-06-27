@@ -3,14 +3,14 @@
 #include <chrono>
 #include <nms.h>
 // ORB Extractor parameters
-const int nFeatures = 2000;
+const int nFeatures = 2500;
 const float scaleFactor = 1.2;
 const int nLevels = 8;
 const int iniFAST = 20;
 const int minThFAST = 2;
 
 ObjectTracker::ObjectTracker(const float maxdistTh, const Size frameSize_): maxDistThres(maxdistTh), minDistThres(0.5), frameSize(frameSize_),
-    nn_match_ratio(0.9f), ransac_thresh(2.5f), minInliersTh(0.3)
+    nn_match_ratio(0.9f), ransac_thresh(2.5f), minInliersTh(0.5)
 {
     initObject = new DetectedObject(-1, -1, cv::Rect(0, 0, 0, 0));
     size_t MaxObjects = 10;
@@ -324,7 +324,7 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
                 vector<KeyPoint> matched1, matched2;
                 size_t nInliers=0;
                 float ratio = Objectmatcher(iObjectDes, vdescriptorsInObject->at(i), iObjectKps, vkpsInObject->at(i), matched1, matched2, "2.3.2", nInliers);
-                if( ratio <= minInliersTh*0.8)
+                if( ratio <= minInliersTh*1.2)
                     continue;
                 else
                 {
@@ -407,7 +407,7 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
     // 2.3.4 nms - remove the wrong adding in 2.3.3
     std::vector<cv::Rect> objectRects, resRects;
     std::vector<float> scores;
-    float overlopTh = 0.7;
+    float overlopTh = 0.3;
     for(size_t i = 0; i < vCurrentObjects.size(); i++)
     {
         objectRects.push_back(vCurrentObjects.at(i).bounding_box);
@@ -438,8 +438,40 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
             vkpsInObject->erase(vkpsInObject->begin() + idx.at(k));
             vdescriptorsInObject->erase(vdescriptorsInObject->begin() + idx.at(k));
             vnCurrentTrackObjectID->erase(vnCurrentTrackObjectID->begin() + idx.at(k));
+            //idx sort by small to big
+            for(size_t m = k; m < idx.size();m++)
+                idx.at(m) -= 1;
         }
     }
+
+//    //2.3.5 recheck current frame object(with id), compared with
+//    std::cout << "2.3.5  " <<  std::endl;
+//    for(int iCurrentObject = 0; iCurrentObject < vCurrentObjects.size(); iCurrentObject++)
+//    {
+//        int iCId = vnCurrentTrackObjectID->at(iCurrentObject);
+//        for(int iObjectInBag = 0; iObjectInBag < mvObjectBag->size(); iObjectInBag++)
+//        {
+//            if(iCId != mvObjectBag->at(iObjectInBag).first || mvObjectObservedTimes->at(iObjectInBag) == -1)
+//                continue;
+
+//            std::vector<cv::KeyPoint> vCKPs = vkpsInObject->at(iCurrentObject);
+//            cv::Mat vCDes = vdescriptorsInObject->at(iCurrentObject);
+
+//            std::vector<cv::KeyPoint> vKPsInBag = mvObjectBag->at(iObjectInBag).second.first;
+//            cv::Mat vDesInBag = mvObjectBag->at(iObjectInBag).second.second;
+
+//            vector<KeyPoint> matched1, matched2;
+//            size_t nInliers=0;
+//            float ratio = Objectmatcher(vDesInBag, vCDes, vKPsInBag, vCKPs, matched1, matched2, "2.3.5", nInliers);
+
+//            if(ratio <= minInliersTh*0.5)
+//                vnCurrentTrackObjectID->at(iCurrentObject) = -1;
+
+//        }
+
+//    }
+
+
 
     // 3. add new track to objectBag
     for(size_t icurrentTrack = 0; icurrentTrack < vCurrentObjects.size(); icurrentTrack++)
@@ -536,7 +568,7 @@ void ObjectTracker::grabImgWithObjects(Mat &frame, vObjects &vCurrentObjects)
     // if unobserved times > 3, remove it
     for(size_t iUnOb = 0; iUnOb < mvObjectUnobservedTimes->size(); iUnOb++)
     {
-        if(mvObjectUnobservedTimes->at(iUnOb) >= 5)
+        if(mvObjectUnobservedTimes->at(iUnOb) >= 1)
         {
             mvObjectObservedTimes->at(iUnOb) = -1;
             mvObjectUnobservedTimes->at(iUnOb) = -1;
@@ -700,14 +732,13 @@ float ObjectTracker::Objectmatcher(Mat lastDescriptor,
         Fundamental = findFundamentalMat(Points(match1), Points(match2), FM_RANSAC, 2.5, 0.99, inlier_mask_F);
     }
 
-//    if(match1.size() < 8) {
-//        return 0;
-//    }
+
     if(inlier_mask_F.cols * inlier_mask_F.rows == 0)
     {
          nInliers = 0;
          return 0;
     }
+
 
     for(unsigned i = 0; i < match1.size(); i++) {
         if(inlier_mask_F.at<uchar>(i)) {
@@ -732,8 +763,8 @@ float ObjectTracker::Objectmatcher(Mat lastDescriptor,
               << std::endl;
 
     nInliers = inliers1_F.size();
-//    if(inliers1_F.size() < 8)
-//        return 0;
+    if(inliers1_F.size() < 10)
+        return 0;
 
     return ratio;
 

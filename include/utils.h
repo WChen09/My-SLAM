@@ -71,7 +71,7 @@ void DrawDetector(cv::Mat& frame, std::vector<DetectedObject>& detectedBox, std:
         cv::rectangle(frame, currentRect, cv::Scalar(255, 0, 0), 1, CV_AA);
         char str[255];
         sprintf(str,"%d", nTracker_[i]);
-        cv::putText(frame, str, cv::Point2f(currentRect.x, currentRect.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 0, 0), 1);
+        cv::putText(frame, str, cv::Point2f(currentRect.x, currentRect.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 1);
     }
 }
 
