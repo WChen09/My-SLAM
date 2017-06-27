@@ -246,24 +246,24 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const d
 }
 
 
-cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp, const vector<DetectedObject> &detected)
+cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
 {
     mImGray = im;
 
-    //if object area over threshold obth, return last pose
-    float obth = 0.3;
-    int wholeArea = 0, objectArea = 0;
-    wholeArea = im.cols * im.rows;
-    std::cout << " detect " << detected.size() << " objects: " << "[class, prob, areaRatio]" << std::endl;
-    for(int i = 0; i < detected.size(); i++){
-        DetectedObject currO = detected[i];
-        objectArea += currO.bounding_box.area();
-        std::cout << "  [" << currO.object_class << ", " << currO.prob << ", " << float(currO.bounding_box.area())/float(wholeArea) << "] ";
-    }
-    std::cout << std::endl << "whole Area ratio: " << float(objectArea)/float(wholeArea) << endl;
-//    if(objectArea/wholeArea > obth){
-//        return mLastFrame.mTcw.clone();
+//    //if object area over threshold obth, return last pose
+//    float obth = 0.3;
+//    int wholeArea = 0, objectArea = 0;
+//    wholeArea = im.cols * im.rows;
+//    std::cout << " detect " << detected.size() << " objects: " << "[class, prob, areaRatio]" << std::endl;
+//    for(int i = 0; i < detected.size(); i++){
+//        DetectedObject currO = detected[i];
+//        objectArea += currO.bounding_box.area();
+//        std::cout << "  [" << currO.object_class << ", " << currO.prob << ", " << float(currO.bounding_box.area())/float(wholeArea) << "] ";
 //    }
+//    std::cout << std::endl << "whole Area ratio: " << float(objectArea)/float(wholeArea) << endl;
+////    if(objectArea/wholeArea > obth){
+////        return mLastFrame.mTcw.clone();
+////    }
 
     if(mImGray.channels()==3)
     {
@@ -281,9 +281,9 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp,
     }
 
     if(mState==NOT_INITIALIZED || mState==NO_IMAGES_YET)
-        mCurrentFrame = Frame(mImGray,timestamp,mpIniORBextractor,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,detected);
+        mCurrentFrame = Frame(mImGray,timestamp,mpIniORBextractor,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
     else
-        mCurrentFrame = Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth,detected);
+        mCurrentFrame = Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
 
     Track();
 

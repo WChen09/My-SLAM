@@ -291,15 +291,15 @@ cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
         mbReset = false;
     }
     }
-    //detect object
-    std::cout << endl << " --------" << std::endl;
+//    //detect object
+//    std::cout << endl << " --------" << std::endl;
 
-    std::cout << "New Frame" << std::endl;
-    std::cout << " detecting objects" << std::endl;
-    std::vector<DetectedObject> detected;
-    yolo->detect(im.clone(), detected);
-    std::cout << " detect done" << std::endl;
-    cv::Mat Tcw = mpTracker->GrabImageMonocular(im, timestamp, detected);
+//    std::cout << "New Frame" << std::endl;
+//    std::cout << " detecting objects" << std::endl;
+//    std::vector<DetectedObject> detected;
+//    yolo->detect(im.clone(), detected);
+//    std::cout << " detect done" << std::endl;
+    cv::Mat Tcw = mpTracker->GrabImageMonocular(im, timestamp);
     unique_lock<mutex> lock2(mMutexState);
     mTrackingState = mpTracker->mState;
     mTrackedMapPoints = mpTracker->mCurrentFrame.mvpMapPoints;
