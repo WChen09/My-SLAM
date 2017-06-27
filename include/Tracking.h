@@ -37,7 +37,7 @@
 #include "Initializer.h"
 #include "MapDrawer.h"
 #include "System.h"
-
+#include "Thirdparty/darknet/src/yolo.h"
 #include <mutex>
 
 namespace ORB_SLAM2
@@ -55,7 +55,7 @@ class Tracking
 
 public:
     Tracking(System* pSys, ORBVocabulary* pVoc, FrameDrawer* pFrameDrawer, MapDrawer* pMapDrawer, Map* pMap,
-             KeyFrameDatabase* pKFDB, const string &strSettingPath, const int sensor);
+             KeyFrameDatabase* pKFDB, Yolo* yoloDetector, const string &strSettingPath, const int sensor);
 
     // Preprocess the input and call Track(). Extract features and performs stereo matching.
     cv::Mat GrabImageStereo(const cv::Mat &imRectLeft,const cv::Mat &imRectRight, const double &timestamp);
@@ -157,6 +157,9 @@ protected:
     //ORB
     ORBextractor* mpORBextractorLeft, *mpORBextractorRight;
     ORBextractor* mpIniORBextractor;
+
+    //Yolo
+    Yolo* mpObjectDetector;
 
     //BoW
     ORBVocabulary* mpORBVocabulary;

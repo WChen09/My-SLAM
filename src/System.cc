@@ -33,9 +33,9 @@ namespace ORB_SLAM2
 
 System::System(const string &strVocFile, const string &strSettingsFile, const string &yoloSettingFile, const eSensor sensor,
                const bool bUseViewer):mSensor(sensor), mpViewer(static_cast<Viewer*>(NULL)), mbReset(false),mbActivateLocalizationMode(false),
-        mbDeactivateLocalizationMode(false)
+    mbDeactivateLocalizationMode(false)
 {
-// ORB-SLAM2 Configuration
+    // ORB-SLAM2 Configuration
     cout << "-------->>>>>>>>" << endl
          << "ORB-SLAM2 Configuration" << endl;
 
@@ -52,8 +52,8 @@ System::System(const string &strVocFile, const string &strSettingsFile, const st
     cv::FileStorage fsSettings(strSettingsFile.c_str(), cv::FileStorage::READ);
     if(!fsSettings.isOpened())
     {
-       cerr << "ERROR: Failed to open settings file at: " << strSettingsFile << endl;
-       exit(-1);
+        cerr << "ERROR: Failed to open settings file at: " << strSettingsFile << endl;
+        exit(-1);
     }
 
     //Load ORB Vocabulary
@@ -69,6 +69,15 @@ System::System(const string &strVocFile, const string &strSettingsFile, const st
         exit(-1);
     }
     cout << " Vocabulary loaded!" << endl << endl;
+
+    // Darknet YOLO2 configuration
+    cout << endl << "-------->>>>>>>>" << endl
+         << "Darknet YOLO2 Configuration" << endl;
+    yolo = new Yolo();
+    yolo->readConfig(yoloSettingFile);
+    yolo->loadConfig();
+    names = yolo->get_labels_();
+    cout << " YOLO2 config done!" << endl << endl;
     //Create the Map
 
     mpMap = new Map();
@@ -104,7 +113,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const st
     //Initialize the Tracking thread
     //(it will live in the main thread of execution, the one that called this constructor)
     mpTracker = new Tracking(this, mpVocabulary, mpFrameDrawer, mpMapDrawer,
-                             mpMap, mpKeyFrameDatabase, strSettingsFile, mSensor);
+                             mpMap, mpKeyFrameDatabase, yolo, strSettingsFile, mSensor);
 
     //Initialize the Local Mapping thread and launch
     mpLocalMapper = new LocalMapping(mpMap, mSensor==MONOCULAR);
@@ -135,16 +144,6 @@ System::System(const string &strVocFile, const string &strSettingsFile, const st
     if(SLAM != 1)
         ActivateLocalizationMode();
 
-// Darknet YOLO2 configuration
-    cout << endl << "-------->>>>>>>>" << endl
-         << "Darknet YOLO2 Configuration" << endl;
-
-    yolo = new Yolo();
-    yolo->readConfig(yoloSettingFile);
-    yolo->loadConfig();
-
-    names = yolo->get_labels_();
-
     mpFrameDrawer->loadObjectNames(names);
 }
 
@@ -154,7 +153,7 @@ cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const
     {
         cerr << "ERROR: you called TrackStereo but input sensor was not set to STEREO." << endl;
         exit(-1);
-    }   
+    }
 
     // Check mode change
     {
@@ -182,12 +181,12 @@ cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const
 
     // Check reset
     {
-    unique_lock<mutex> lock(mMutexReset);
-    if(mbReset)
-    {
-        mpTracker->Reset();
-        mbReset = false;
-    }
+        unique_lock<mutex> lock(mMutexReset);
+        if(mbReset)
+        {
+            mpTracker->Reset();
+            mbReset = false;
+        }
     }
 
     cv::Mat Tcw = mpTracker->GrabImageStereo(imLeft,imRight,timestamp);
@@ -205,7 +204,7 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
     {
         cerr << "ERROR: you called TrackRGBD but input sensor was not set to RGBD." << endl;
         exit(-1);
-    }    
+    }
 
     // Check mode change
     {
@@ -233,12 +232,12 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
 
     // Check reset
     {
-    unique_lock<mutex> lock(mMutexReset);
-    if(mbReset)
-    {
-        mpTracker->Reset();
-        mbReset = false;
-    }
+        unique_lock<mutex> lock(mMutexReset);
+        if(mbReset)
+        {
+            mpTracker->Reset();
+            mbReset = false;
+        }
     }
 
     cv::Mat Tcw = mpTracker->GrabImageRGBD(im,depthmap,timestamp);
@@ -284,21 +283,21 @@ cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
 
     // Check reset
     {
-    unique_lock<mutex> lock(mMutexReset);
-    if(mbReset)
-    {
-        mpTracker->Reset();
-        mbReset = false;
+        unique_lock<mutex> lock(mMutexReset);
+        if(mbReset)
+        {
+            mpTracker->Reset();
+            mbReset = false;
+        }
     }
-    }
-//    //detect object
-//    std::cout << endl << " --------" << std::endl;
+    //    //detect object
+    //    std::cout << endl << " --------" << std::endl;
 
-//    std::cout << "New Frame" << std::endl;
-//    std::cout << " detecting objects" << std::endl;
-//    std::vector<DetectedObject> detected;
-//    yolo->detect(im.clone(), detected);
-//    std::cout << " detect done" << std::endl;
+    //    std::cout << "New Frame" << std::endl;
+    //    std::cout << " detecting objects" << std::endl;
+    //    std::vector<DetectedObject> detected;
+    //    yolo->detect(im.clone(), detected);
+    //    std::cout << " detect done" << std::endl;
     cv::Mat Tcw = mpTracker->GrabImageMonocular(im, timestamp);
     unique_lock<mutex> lock2(mMutexState);
     mTrackingState = mpTracker->mState;
@@ -440,7 +439,7 @@ void System::SaveKeyFrameTrajectoryTUM(const string &filename)
     {
         KeyFrame* pKF = vpKFs[i];
 
-       // pKF->SetPose(pKF->GetPose()*Two);
+        // pKF->SetPose(pKF->GetPose()*Two);
 
         if(pKF->isBad())
             continue;
@@ -493,7 +492,7 @@ void System::SaveTrajectoryKITTI(const string &filename)
 
         while(pKF->isBad())
         {
-          //  cout << "bad parent" << endl;
+            //  cout << "bad parent" << endl;
             Trw = Trw*pKF->mTcp;
             pKF = pKF->GetParent();
         }

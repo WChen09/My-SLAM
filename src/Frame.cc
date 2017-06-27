@@ -22,6 +22,7 @@
 #include "Converter.h"
 #include "ORBmatcher.h"
 #include <thread>
+#include "ObjectTracking.h"
 
 namespace ORB_SLAM2
 {
@@ -182,10 +183,11 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeSt
 }
 
 
-Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extractor, ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth)
-    :mpORBvocabulary(voc),mpORBextractorLeft(extractor),mpORBextractorRight(static_cast<ORBextractor*>(NULL)),
+Frame::Frame(const cv::Mat &im, const double &timeStamp, ORBextractor* extractor, ORBVocabulary* voc, Yolo* detector, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth, bool bRGB)
+    :mpORBvocabulary(voc),mpORBextractorLeft(extractor),mpORBextractorRight(static_cast<ORBextractor*>(NULL)), mpDetector(detector),
      mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth)
 {
+
     // Frame ID
     mnId=nNextId++;
 
@@ -198,8 +200,28 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
     mvLevelSigma2 = mpORBextractorLeft->GetScaleSigmaSquares();
     mvInvLevelSigma2 = mpORBextractorLeft->GetInverseScaleSigmaSquares();
 
+    cv::Mat imGray;
+    if(im.channels()==3)
+    {
+        if(bRGB)
+            cv::cvtColor(im,imGray,CV_RGB2GRAY);
+        else
+            cv::cvtColor(im,imGray,CV_BGR2GRAY);
+    }
+    else if(im.channels()==4)
+    {
+        if(bRGB)
+            cv::cvtColor(im,imGray,CV_RGBA2GRAY);
+        else
+            cv::cvtColor(im,imGray,CV_BGRA2GRAY);
+    }
+
     // ORB extraction
-    ExtractORB(0,imGray);
+    std::thread ORBEx(&Frame::ExtractORB, this, 0, imGray);
+    std::thread ObjectD(&Frame::ObjectDetection, this, im);
+//    ExtractORB(0,imGray);
+
+    ORBEx.join();
 
     N = mvKeys.size();
 
@@ -237,7 +259,10 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
 
     AssignFeaturesToGrid();
 
-    addClassLabel2Feature();
+    ObjectD.join();
+
+
+//    addClassLabel2Feature();
 }
 
 void Frame::addClassLabel2Feature(){
@@ -709,5 +734,11 @@ cv::Mat Frame::UnprojectStereo(const int &i)
 void Frame::SetCameraParameters(cv::Mat &K, cv::Mat &DistCoef){
     K.copyTo(mK);
     DistCoef.copyTo(mDistCoef);
+}
+
+
+void Frame::ObjectDetection(const cv::Mat &im)
+{
+    mpDetector->detect(im, mvObjects);
 }
 } //namespace ORB_SLAM
