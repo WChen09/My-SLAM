@@ -147,7 +147,7 @@ public:
     float mThDepth;
 
     // Number of KeyPoints.
-    int N;//unlabeled
+    int N;//all
     int Nlabeled;
 
     //vector of objects in this frame

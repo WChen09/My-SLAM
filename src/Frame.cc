@@ -214,14 +214,14 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
     mvObjectId.resize(mvObjects.size(), -1);
 
     reOrgnizeFeature();
-    // unlabeled number of kps
-    N = mvKeysUn.size() - Nlabeled;
-    // Set no stereo information
-    mvuRight = vector<float>(N + Nlabeled,-1);
-    mvDepth = vector<float>(N + Nlabeled,-1);
 
-    mvpMapPoints = vector<MapPoint*>(N + Nlabeled,static_cast<MapPoint*>(NULL));
-    mvbOutlier = vector<bool>(N + Nlabeled,false);
+    N = mvKeysUn.size();
+    // Set no stereo information
+    mvuRight = vector<float>(N,-1);
+    mvDepth = vector<float>(N,-1);
+
+    mvpMapPoints = vector<MapPoint*>(N,static_cast<MapPoint*>(NULL));
+    mvbOutlier = vector<bool>(N,false);
 
     // This is done only for the first Frame (or after a change in the calibration)
     if(mbInitialComputations)
@@ -444,7 +444,7 @@ bool Frame::isInFrustum(MapPoint *pMP, float viewingCosLimit)
 vector<size_t> Frame::GetFeaturesInArea(const float &x, const float  &y, const float  &r, const int minLevel, const int maxLevel) const
 {
     vector<size_t> vIndices;
-    vIndices.reserve(N + Nlabeled);
+    vIndices.reserve(N);
 
     const int nMinCellX = max(0,(int)floor((x-mnMinX-r)*mfGridElementWidthInv));
     if(nMinCellX>=FRAME_GRID_COLS)
