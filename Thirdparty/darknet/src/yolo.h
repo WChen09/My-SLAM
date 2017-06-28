@@ -20,8 +20,8 @@ using namespace std;
 class Yolo {
 public:
 
-    Yolo();
-
+    Yolo(const string& filename);
+    ~Yolo(){}
     void detect(const cv::Mat& img, std::vector<DetectedObject>& detection)const; //Throws
     void readConfig(std::string filename);
     void loadConfig();
@@ -53,9 +53,9 @@ private:
     char **names;
     image **alphabet;
 
-    //Avoid copy by keeping these unimplemented
-    const Yolo& operator=(const Yolo& rhs);
-    Yolo(const Yolo& copy);
+//    //Avoid copy by keeping these unimplemented
+//    const Yolo& operator=(const Yolo& rhs);
+//    Yolo(const Yolo& copy);
 };
 
 #endif //DARKNET_YOLO_H

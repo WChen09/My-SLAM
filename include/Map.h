@@ -66,7 +66,7 @@ public:
     // This avoid that two points are created simultaneously in separate threads (id conflict)
     std::mutex mMutexPointCreation;
 
-    int mnLabeledMP;
+//    int mnLabeledMP;
 
     bool Save(const string &filename);
     bool Load(const string &filename, ORBVocabulary &voc, const string &settingFile);

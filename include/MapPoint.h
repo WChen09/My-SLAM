@@ -84,7 +84,7 @@ public:
     int PredictScale(const float &currentDist, KeyFrame*pKF);
     int PredictScale(const float &currentDist, Frame* pF);
 
-    void setLabelClass(const int &class_);
+//    void setLabelClass(const int &class_);
 
 public:
     long unsigned int mnId;
@@ -118,7 +118,7 @@ public:
     static std::mutex mGlobalMutex;
 
     //class name
-    int mnObjectClass;
+//    int mnObjectClass;
 
 protected:    
 

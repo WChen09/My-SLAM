@@ -60,6 +60,7 @@ Frame::Frame(const Frame &frame)
      mfScaleFactor(frame.mfScaleFactor), mfLogScaleFactor(frame.mfLogScaleFactor),
      mvScaleFactors(frame.mvScaleFactors), mvInvScaleFactors(frame.mvInvScaleFactors),
      mvLevelSigma2(frame.mvLevelSigma2), mvInvLevelSigma2(frame.mvInvLevelSigma2)
+     //mvObjects(frame.mvObjects), mpDetector(frame.mpDetector)
 {
     for(int i=0;i<FRAME_GRID_COLS;i++)
         for(int j=0; j<FRAME_GRID_ROWS; j++)
@@ -183,8 +184,8 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeSt
 }
 
 
-Frame::Frame(const cv::Mat &im, const double &timeStamp, ORBextractor* extractor, ORBVocabulary* voc, Yolo* detector, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth, bool bRGB)
-    :mpORBvocabulary(voc),mpORBextractorLeft(extractor),mpORBextractorRight(static_cast<ORBextractor*>(NULL)), mpDetector(detector),
+Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extractor, ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth, const std::vector<DetectedObject> &objects)
+    :mpORBvocabulary(voc),mpORBextractorLeft(extractor),mpORBextractorRight(static_cast<ORBextractor*>(NULL)),
      mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth)
 {
 
@@ -200,28 +201,7 @@ Frame::Frame(const cv::Mat &im, const double &timeStamp, ORBextractor* extractor
     mvLevelSigma2 = mpORBextractorLeft->GetScaleSigmaSquares();
     mvInvLevelSigma2 = mpORBextractorLeft->GetInverseScaleSigmaSquares();
 
-    cv::Mat imGray;
-    if(im.channels()==3)
-    {
-        if(bRGB)
-            cv::cvtColor(im,imGray,CV_RGB2GRAY);
-        else
-            cv::cvtColor(im,imGray,CV_BGR2GRAY);
-    }
-    else if(im.channels()==4)
-    {
-        if(bRGB)
-            cv::cvtColor(im,imGray,CV_RGBA2GRAY);
-        else
-            cv::cvtColor(im,imGray,CV_BGRA2GRAY);
-    }
-
-    // ORB extraction
-    std::thread ORBEx(&Frame::ExtractORB, this, 0, imGray);
-    std::thread ObjectD(&Frame::ObjectDetection, this, im);
-//    ExtractORB(0,imGray);
-
-    ORBEx.join();
+    ExtractORB(0, imGray);
 
     N = mvKeys.size();
 
@@ -259,22 +239,30 @@ Frame::Frame(const cv::Mat &im, const double &timeStamp, ORBextractor* extractor
 
     AssignFeaturesToGrid();
 
-    ObjectD.join();
+    mvObjects = objects;
 
-
-//    addClassLabel2Feature();
+    reOrgnizeFeature();
 }
 
-void Frame::addClassLabel2Feature(){
+void Frame::reOrgnizeFeature(){
+
+    mvkpsInObject.resize(mvObjects.size());
+    mvdescriptorsInObject.resize(mvObjects.size());
+
     for(int i = 0; i < mvKeys.size(); i++){
-//        cv::KeyPoint curKP = mvKeys[i];
-//        cv::KeyPoint curKPUn = mvKeysUn[i];
         for(int j = 0; j < mvObjects.size(); j++){
             DetectedObject curObjects = mvObjects[j];
             if(curObjects.bounding_box.contains(mvKeys[i].pt))
+            {
                 mvKeys[i].class_id = curObjects.object_class;
+
+            }
+
             if(curObjects.bounding_box.contains(mvKeysUn[i].pt))
+            {
                 mvKeysUn[i].class_id = curObjects.object_class;
+            }
+
         }
     }
 }
@@ -736,9 +724,55 @@ void Frame::SetCameraParameters(cv::Mat &K, cv::Mat &DistCoef){
     DistCoef.copyTo(mDistCoef);
 }
 
-
-void Frame::ObjectDetection(const cv::Mat &im)
+reorganizeORB(std::vector<KeyPoint> KpsIn, Mat descriptorsIn, std::vector<DetectedObject> ObjectBox)
 {
-    mpDetector->detect(im, mvObjects);
+    //    std::cout << "whole: " << descriptorsIn << std::endl << std::endl << std::endl;
+    std::vector<int> InObject(KpsIn.size(), -1);
+    vkpsInObject = new std::vector<std::vector<cv::KeyPoint>>(ObjectBox.size());
+    vdescriptorsInObject = new std::vector<cv::Mat>(ObjectBox.size());
+
+    for(size_t iObject=0; iObject < ObjectBox.size(); iObject++)
+    {
+        // keyPoints
+        std::vector<KeyPoint>& kpsInObject = vkpsInObject->at(iObject);
+
+        DetectedObject currentObject = ObjectBox[iObject];
+        cv::Rect box = currentObject.bounding_box;
+        size_t nKPInobject = 0;
+
+        for(size_t iKps = 0; iKps < KpsIn.size(); iKps++)
+        {
+            if(InObject[iKps] != -1)
+                continue;
+
+            cv::Point p(KpsIn[iKps].pt);
+            if(box.contains(p))
+            {
+                kpsInObject.push_back(KpsIn[iKps]);
+                InObject[iKps] = (int)iObject;
+                nKPInobject++;
+            }
+            else
+                continue;
+        }
+        // descriptors
+        cv::Mat objectDescriptor = Mat::zeros((int)nKPInobject, 32, CV_8UC1);
+        int nidescriptor = 0;
+        for(size_t i=0; i<InObject.size(); i++)
+        {
+            if(InObject[i] != (int)iObject)
+                continue;
+
+            //            std::cout << i << " " << descriptorsIn.row(i) << std::endl << std::endl;
+
+            descriptorsIn.row(i).copyTo(objectDescriptor.row(nidescriptor));
+            nidescriptor++;
+        }
+        //        std::cout << objectDescriptor << std::endl;
+        vdescriptorsInObject->at(iObject) = objectDescriptor;
+    }
+
 }
+
+
 } //namespace ORB_SLAM

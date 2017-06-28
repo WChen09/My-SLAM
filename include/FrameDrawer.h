@@ -48,7 +48,7 @@ public:
     // Draw last processed frame.
     cv::Mat DrawFrame();
 
-    void loadObjectNames(vector<string> &names_);
+    void loadObjectNames(vector<string> names_);
 
 protected:
 
@@ -65,9 +65,9 @@ protected:
     vector<int> mvIniMatches;
     int mState;
 
-    vector<DetectedObject> mvCurrentObjects;
+//    vector<DetectedObject> mvCurrentObjects;
     vector<string> names;
-    int mnlabeled, mnlabeledVO;
+//    int mnlabeled, mnlabeledVO;
 
     Map* mpMap;
 

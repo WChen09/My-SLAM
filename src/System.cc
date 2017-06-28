@@ -70,14 +70,6 @@ System::System(const string &strVocFile, const string &strSettingsFile, const st
     }
     cout << " Vocabulary loaded!" << endl << endl;
 
-    // Darknet YOLO2 configuration
-    cout << endl << "-------->>>>>>>>" << endl
-         << "Darknet YOLO2 Configuration" << endl;
-    yolo = new Yolo();
-    yolo->readConfig(yoloSettingFile);
-    yolo->loadConfig();
-    names = yolo->get_labels_();
-    cout << " YOLO2 config done!" << endl << endl;
     //Create the Map
 
     mpMap = new Map();
@@ -113,7 +105,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const st
     //Initialize the Tracking thread
     //(it will live in the main thread of execution, the one that called this constructor)
     mpTracker = new Tracking(this, mpVocabulary, mpFrameDrawer, mpMapDrawer,
-                             mpMap, mpKeyFrameDatabase, yolo, strSettingsFile, mSensor);
+                             mpMap, mpKeyFrameDatabase, strSettingsFile, mSensor);
 
     //Initialize the Local Mapping thread and launch
     mpLocalMapper = new LocalMapping(mpMap, mSensor==MONOCULAR);
@@ -143,6 +135,21 @@ System::System(const string &strVocFile, const string &strSettingsFile, const st
 
     if(SLAM != 1)
         ActivateLocalizationMode();
+
+    // Darknet YOLO2 configuration
+    try
+    {
+        cout << endl << "-------->>>>>>>>" << endl
+             << "Darknet YOLO2 Configuration" << endl;
+        yolo = new Yolo(yoloSettingFile);
+        names = yolo->get_labels_();
+        cout << " YOLO2 config done!" << endl << endl;
+    }
+    catch(bad_alloc)
+    {
+        std::cout << "yolo error!" << std::endl;
+        exit(0);
+    }
 
     mpFrameDrawer->loadObjectNames(names);
 }
@@ -290,15 +297,16 @@ cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
             mbReset = false;
         }
     }
-    //    //detect object
-    //    std::cout << endl << " --------" << std::endl;
+    //detect object
+    std::cout << endl << " --------" << std::endl;
 
-    //    std::cout << "New Frame" << std::endl;
-    //    std::cout << " detecting objects" << std::endl;
-    //    std::vector<DetectedObject> detected;
-    //    yolo->detect(im.clone(), detected);
-    //    std::cout << " detect done" << std::endl;
-    cv::Mat Tcw = mpTracker->GrabImageMonocular(im, timestamp);
+    std::cout << "New Frame" << std::endl;
+    std::cout << " detecting objects" << std::endl;
+    std::vector<DetectedObject> detected;
+    yolo->detect(im.clone(), detected);
+    std::cout << " detect done" << std::endl;
+
+    cv::Mat Tcw = mpTracker->GrabImageMonocular(im, timestamp, detected);
     unique_lock<mutex> lock2(mMutexState);
     mTrackingState = mpTracker->mState;
     mTrackedMapPoints = mpTracker->mCurrentFrame.mvpMapPoints;

@@ -189,11 +189,11 @@ void LocalMapping::MapPointCulling()
         {
             lit = mlpRecentAddedMapPoints.erase(lit);
         }
-        else if(pMP->mnObjectClass != -1)
-        {
-            pMP->SetBadFlag();
-            lit = mlpRecentAddedMapPoints.erase(lit);
-        }
+//        else if(pMP->mnObjectClass != -1)
+//        {
+//            pMP->SetBadFlag();
+//            lit = mlpRecentAddedMapPoints.erase(lit);
+//        }
         else if(pMP->GetFoundRatio()<0.25f)
         {
             pMP->SetBadFlag();
@@ -440,9 +440,9 @@ void LocalMapping::CreateNewMapPoints()
             // Triangulation is succesfull
             MapPoint* pMP = new MapPoint(x3D,mpCurrentKeyFrame,mpMap);
 
-            if(mpCurrentKeyFrame->mvKeysUn[idx1].class_id > -1){
-                pMP->setLabelClass(mpCurrentKeyFrame->mvKeysUn[idx1].class_id);
-            }
+//            if(mpCurrentKeyFrame->mvKeysUn[idx1].class_id > -1){
+//                pMP->setLabelClass(mpCurrentKeyFrame->mvKeysUn[idx1].class_id);
+//            }
             pMP->AddObservation(mpCurrentKeyFrame,idx1);
             pMP->AddObservation(pKF2,idx2);
 

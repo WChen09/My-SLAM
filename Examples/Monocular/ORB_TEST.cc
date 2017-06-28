@@ -68,9 +68,7 @@ int main(int argc, char **argv)
     ORB_SLAM2::ORBextractor* pORBextractorLeft = new ORB_SLAM2::ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
     ORB_SLAM2::ORBextractor* pORBextractorOrigin = new ORB_SLAM2::ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
 
-    Yolo yolo;
-    yolo.readConfig(argv[2]);
-    yolo.loadConfig();
+    Yolo yolo(argv[2]);
     vector<string> name =yolo.get_labels_();
     names = name;
     cv::Mat im, imGray;
@@ -95,7 +93,7 @@ int main(int argc, char **argv)
 
         //cost the same time ~ 0.0770s
         std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
-        (*pORBextractorLeft)(imGray, cv::Mat(), vKeys, Descriptors, objects);
+//        (*pORBextractorLeft)(imGray, cv::Mat(), vKeys, Descriptors, objects);
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
         (*pORBextractorOrigin)(imGray, cv::Mat(), vKeysOrigin, DescriptorsOrigin);
         std::chrono::steady_clock::time_point t3 = std::chrono::steady_clock::now();

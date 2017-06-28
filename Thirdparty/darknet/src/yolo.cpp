@@ -6,8 +6,51 @@
 
 #include <chrono>
 
-Yolo::Yolo()
+Yolo::Yolo(const string &filename)
 {
+    cv::FileStorage file(filename, cv::FileStorage::READ);
+    if (!file.isOpened()){
+        std::cerr << "failed to open config file " << filename <<  std::endl;
+        exit(0);
+    }
+
+    file["dataPath"] >> datacfg;
+
+    file["netCfgPath"] >> cfgfile;
+
+    file["weightPath"] >> weightfile;
+
+    file["nameListPath"] >> name_list;
+
+    file["thresh"] >> thresh;
+
+    file["hier_thresh"] >> hier_thresh;
+
+    file["nms"] >> nms;
+
+    file["alphabetPath"] >> alphabet_path;
+
+    file["imgPathFile"] >> imgPathFile;
+
+    file["saveVideo"] >> videoFile;
+
+    file["nClass"] >> nClass;
+
+    file.release();
+    std::cout << "--------" << std::endl;
+    std::cout << "loading config information: " << std::endl;
+    std::cout << "dataPath: " << datacfg << std::endl;
+    std::cout << "netCfgPath: " << cfgfile << std::endl;
+    std::cout << "weightPath: " << weightfile << std::endl;
+    std::cout << "nameListPath" << name_list << std::endl;
+    std::cout << "alphabetPath" << alphabet_path << std::endl;
+    std::cout << "imgPathFile" << imgPathFile << std::endl;
+    std::cout << "thresh " << thresh << std::endl;
+    std::cout << "hier_thresh " << hier_thresh << std::endl;
+    std::cout << "nms " << nms << std::endl;
+    std::cout << "nClass " << nClass << std::endl;
+
+    loadConfig();
 
 }
 

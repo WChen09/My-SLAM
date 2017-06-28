@@ -43,6 +43,7 @@ cv::Mat FrameDrawer::DrawFrame()
     vector<cv::KeyPoint> vCurrentKeys; // KeyPoints in current frame
     vector<bool> vbVO, vbMap; // Tracked MapPoints in current frame
     int state; // Tracking state
+    std::vector<DetectedObject> objects;
 
     //Copy variables within scoped mutex
     {
@@ -52,6 +53,8 @@ cv::Mat FrameDrawer::DrawFrame()
             mState=Tracking::NO_IMAGES_YET;
 
         mIm.copyTo(im);
+
+//        objects = mvCurrentObjects;
 
         if(mState==Tracking::NOT_INITIALIZED)
         {
@@ -90,8 +93,8 @@ cv::Mat FrameDrawer::DrawFrame()
     {
         mnTracked=0;
         mnTrackedVO=0;
-        mnlabeled = 0;
-        mnlabeledVO = 0;
+//        mnlabeled = 0;
+//        mnlabeledVO = 0;
         const float r = 5;
         const int n = vCurrentKeys.size();
         for(int i=0;i<n;i++)
@@ -112,7 +115,7 @@ cv::Mat FrameDrawer::DrawFrame()
                         cv::rectangle(im,pt1,pt2,cv::Scalar(255,0,255));//magenta color
                         cv::circle(im,vCurrentKeys[i].pt,2,cv::Scalar(255,0,255),-1);
                         mnTracked++;
-                        mnlabeled++;
+//                        mnlabeled++;
 
                     }
                     else
@@ -130,7 +133,7 @@ cv::Mat FrameDrawer::DrawFrame()
                         cv::rectangle(im,pt1,pt2,cv::Scalar(255,0,255));//magenta color
                         cv::circle(im,vCurrentKeys[i].pt,2,cv::Scalar(255,0,255),-1);
                         mnTrackedVO++;
-                        mnlabeledVO++;
+//                        mnlabeledVO++;
 
                     }
                     else
@@ -142,10 +145,10 @@ cv::Mat FrameDrawer::DrawFrame()
 
                 }
             }
-        }
-        for(int i = 0; i < mvCurrentObjects.size(); i++)
+        }/*
+        for(int i = 0; i < objects.size(); i++)
         {
-            DetectedObject& o = mvCurrentObjects[i];
+            DetectedObject& o = objects[i];
             cv::rectangle(im, o.bounding_box, cv::Scalar(255,0,255), 2);
 
             string class_name = names[o.object_class];
@@ -154,7 +157,7 @@ cv::Mat FrameDrawer::DrawFrame()
             //sprintf(str,"%s %f", names[o.object_class], o.prob);
             sprintf(str,"%s %%%.2f", class_name.c_str(), o.prob);
             cv::putText(im, str, cv::Point2f(o.bounding_box.x,o.bounding_box.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,0,255), 1);
-        }
+        }*/
     }
 
     cv::Mat imWithInfo;
@@ -179,9 +182,9 @@ void FrameDrawer::DrawTextInfo(cv::Mat &im, int nState, cv::Mat &imText)
             s << "LOCALIZATION | ";
         int nKFs = mpMap->KeyFramesInMap();
         int nMPs = mpMap->MapPointsInMap();
-        int nLabeledMPs = mpMap->mnLabeledMP;
-        s << "GMAP [KFs: " << nKFs << ", MPs: " << nMPs << ", labeled: " << nLabeledMPs << ", ratio: "  << float(nLabeledMPs)/float(nMPs) << "]  "
-          << "LMAP [Matches: " << mnTracked << ", labeled: " << mnlabeled << ", ratio: " << float(mnlabeled)/float(mnTracked) << "]";
+//        int nLabeledMPs = mpMap->mnLabeledMP;
+        s << "GMAP [KFs: " << nKFs << ", MPs: " << nMPs //<< ", labeled: " << nLabeledMPs << ", ratio: "  << float(nLabeledMPs)/float(nMPs) << "]  "
+          << "LMAP [Matches: " << mnTracked; //<< ", labeled: " << mnlabeled << ", ratio: " << float(mnlabeled)/float(mnTracked) << "]";
         if(mnTrackedVO>0)
             s << ", + VO matches: " << mnTrackedVO;
     }
@@ -213,7 +216,7 @@ void FrameDrawer::Update(Tracking *pTracker)
     mvbVO = vector<bool>(N,false);
     mvbMap = vector<bool>(N,false);
     mbOnlyTracking = pTracker->mbOnlyTracking;
-    mvCurrentObjects = pTracker->mCurrentFrame.mvObjects;
+//    mvCurrentObjects = pTracker->mCurrentFrame.mvObjects;
 
     if(pTracker->mLastProcessedState==Tracking::NOT_INITIALIZED)
     {
@@ -240,7 +243,7 @@ void FrameDrawer::Update(Tracking *pTracker)
     mState=static_cast<int>(pTracker->mLastProcessedState);
 }
 
-void FrameDrawer::loadObjectNames(vector<string> &names_){
+void FrameDrawer::loadObjectNames(vector<string> names_){
     names = names_;
 }
 

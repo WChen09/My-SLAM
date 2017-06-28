@@ -37,8 +37,8 @@
 
 namespace ORB_SLAM2
 {
-#define FRAME_GRID_ROWS 96 //48
-#define FRAME_GRID_COLS 128 //64
+#define FRAME_GRID_ROWS 48 //48
+#define FRAME_GRID_COLS 64 //64
 
 class MapPoint;
 class KeyFrame;
@@ -58,7 +58,7 @@ public:
     Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeStamp, ORBextractor* extractor,ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth);
 
     // Constructor for Monocular cameras.
-    Frame(const cv::Mat &im, const double &timeStamp, ORBextractor* extractor, ORBVocabulary* voc, Yolo* detector, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth, bool bRGB);
+    Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extractor, ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth, const std::vector<DetectedObject>& objects);
 
     // Extract ORB on the image. 0 for left image and 1 for right image.
     void ExtractORB(int flag, const cv::Mat &im);
@@ -116,18 +116,12 @@ public:
 
     void SetCameraParameters(cv::Mat &K, cv::Mat &DistCoef);
 
-    // detector object in frame
-    void ObjectDetection(const cv::Mat &im);
-
 public:
     // Vocabulary used for relocalization.
     ORBVocabulary* mpORBvocabulary;
 
     // Feature extractor. The right is used only in the stereo case.
     ORBextractor* mpORBextractorLeft, *mpORBextractorRight;
-
-    // YOLO object detector
-    Yolo* mpDetector;
 
     // Frame timestamp.
     double mTimeStamp;
@@ -157,6 +151,8 @@ public:
 
     //vector of objects in this frame
     std::vector<DetectedObject> mvObjects;
+    std::vector<std::vector<cv::KeyPoint>> mvkpsInObject;
+    std::vector<cv::Mat> mvdescriptorsInObject;
 
     // Vector of keypoints (original for visualization) and undistorted (actually used by the system).
     // In the stereo case, mvKeysUn is redundant as images must be rectified.
@@ -214,10 +210,11 @@ public:
 
     static bool mbInitialComputations;
 
+    std::vector<DetectedObject> frameObjects;
 
 private:
 
-    void addClassLabel2Feature();
+    void reOrgnizeFeature();
     // Rotation, translation and camera center
     cv::Mat mRcw;
     cv::Mat mtcw;

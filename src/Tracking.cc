@@ -38,6 +38,7 @@
 #include<mutex>
 
 #include "unistd.h"
+#include<assert.h>
 
 
 using namespace std;
@@ -45,8 +46,8 @@ using namespace std;
 namespace ORB_SLAM2
 {
 
-Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer, MapDrawer *pMapDrawer, Map *pMap, KeyFrameDatabase* pKFDB, Yolo *yoloDetector, const string &strSettingPath, const int sensor):
-    mState(NO_IMAGES_YET), mSensor(sensor), mbOnlyTracking(false), mbVO(false), mpORBVocabulary(pVoc), mpObjectDetector(yoloDetector),
+Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer, MapDrawer *pMapDrawer, Map *pMap, KeyFrameDatabase* pKFDB, const string &strSettingPath, const int sensor):
+    mState(NO_IMAGES_YET), mSensor(sensor), mbOnlyTracking(false), mbVO(false), mpORBVocabulary(pVoc),
     mpKeyFrameDB(pKFDB), mpInitializer(static_cast<Initializer*>(NULL)), mpSystem(pSys), mpViewer(NULL),
     mpFrameDrawer(pFrameDrawer), mpMapDrawer(pMapDrawer), mpMap(pMap), mnLastRelocFrameId(0)
 {
@@ -59,6 +60,7 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
         mpReferenceKF = *akf.end();
         mlRelativeFramePoses.push_back(cv::Mat::eye(4,4,CV_32FC1));
     }
+
     // Load camera parameters from settings file
 
     cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
@@ -246,44 +248,44 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const d
 }
 
 
-cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
+cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp, const std::vector<DetectedObject> &objects)
 {
     mImGray = im;
 
-//    //if object area over threshold obth, return last pose
+    //if object area over threshold obth, return last pose
 //    float obth = 0.3;
-//    int wholeArea = 0, objectArea = 0;
-//    wholeArea = im.cols * im.rows;
-//    std::cout << " detect " << detected.size() << " objects: " << "[class, prob, areaRatio]" << std::endl;
-//    for(int i = 0; i < detected.size(); i++){
-//        DetectedObject currO = detected[i];
-//        objectArea += currO.bounding_box.area();
-//        std::cout << "  [" << currO.object_class << ", " << currO.prob << ", " << float(currO.bounding_box.area())/float(wholeArea) << "] ";
-//    }
-//    std::cout << std::endl << "whole Area ratio: " << float(objectArea)/float(wholeArea) << endl;
+    int wholeArea = 0, objectArea = 0;
+    wholeArea = im.cols * im.rows;
+    std::cout << " detect " << objects.size() << " objects: " << "[class, prob, areaRatio]" << std::endl;
+    for(int i = 0; i < objects.size(); i++){
+        DetectedObject currO = objects[i];
+        objectArea += currO.bounding_box.area();
+        std::cout << "  [" << currO.object_class << ", " << currO.prob << ", " << float(currO.bounding_box.area())/float(wholeArea) << "] ";
+    }
+    std::cout << std::endl << "whole Area ratio: " << float(objectArea)/float(wholeArea) << endl;
 ////    if(objectArea/wholeArea > obth){
 ////        return mLastFrame.mTcw.clone();
 ////    }
 
-//    if(mImGray.channels()==3)
-//    {
-//        if(mbRGB)
-//            cvtColor(mImGray,mImGray,CV_RGB2GRAY);
-//        else
-//            cvtColor(mImGray,mImGray,CV_BGR2GRAY);
-//    }
-//    else if(mImGray.channels()==4)
-//    {
-//        if(mbRGB)
-//            cvtColor(mImGray,mImGray,CV_RGBA2GRAY);
-//        else
-//            cvtColor(mImGray,mImGray,CV_BGRA2GRAY);
-//    }
+    if(mImGray.channels()==3)
+    {
+        if(mbRGB)
+            cvtColor(mImGray,mImGray,CV_RGB2GRAY);
+        else
+            cvtColor(mImGray,mImGray,CV_BGR2GRAY);
+    }
+    else if(mImGray.channels()==4)
+    {
+        if(mbRGB)
+            cvtColor(mImGray,mImGray,CV_RGBA2GRAY);
+        else
+            cvtColor(mImGray,mImGray,CV_BGRA2GRAY);
+    }
 
     if(mState==NOT_INITIALIZED || mState==NO_IMAGES_YET)
-        mCurrentFrame = Frame(mImGray,timestamp,mpIniORBextractor,mpORBVocabulary,mpObjectDetector,mK,mDistCoef,mbf,mThDepth,mbRGB);
+        mCurrentFrame = Frame(mImGray,timestamp,mpIniORBextractor,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth, objects);
     else
-        mCurrentFrame = Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mpObjectDetector,mK,mDistCoef,mbf,mThDepth,mbRGB);
+        mCurrentFrame = Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth, objects);
 
     Track();
 
@@ -693,11 +695,11 @@ void Tracking::CreateInitialMapMonocular()
 
         MapPoint* pMP = new MapPoint(worldPos,pKFcur,mpMap);
 
-        // set label to MapPoints
-        const cv::KeyPoint &kp2 = pKFcur->mvKeysUn[i];
-        if(kp2.class_id != -1){
-            pMP->setLabelClass(kp2.class_id);
-        }
+//        // set label to MapPoints
+//        const cv::KeyPoint &kp2 = pKFcur->mvKeysUn[i];
+//        if(kp2.class_id != -1){
+//            pMP->setLabelClass(kp2.class_id);
+//        }
 
         pKFini->AddMapPoint(pMP,i);
         pKFcur->AddMapPoint(pMP,mvIniMatches[i]);
@@ -1259,9 +1261,9 @@ void Tracking::UpdateLocalPoints()
                 continue;
             if(pMP->mnTrackReferenceForFrame==mCurrentFrame.mnId)
                 continue;
-            //culling labeled MPs
+/*            //culling labeled MPs
             if(pMP->mnObjectClass != -1)
-                continue;
+                continue*/;
             if(!pMP->isBad())
             {
                 mvpLocalMapPoints.push_back(pMP);

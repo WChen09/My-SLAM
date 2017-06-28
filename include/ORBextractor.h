@@ -60,11 +60,6 @@ public:
       std::vector<cv::KeyPoint>& keypoints,
       cv::OutputArray descriptors);
 
-    void operator()(cv::InputArray _image, cv::InputArray _mask,
-                    std::vector<cv::KeyPoint>& _keypoints,
-                    cv::OutputArray _descriptors,
-                    std::vector<DetectedObject> objects);
-
     int inline GetLevels(){
         return nlevels;}
 
@@ -114,10 +109,7 @@ protected:
     std::vector<float> mvLevelSigma2;
     std::vector<float> mvInvLevelSigma2;
 
-    void ComputeObjectPyramid(std::vector<DetectedObject> objects, std::vector<std::vector<DetectedObject> > &objectPyramid);
-    void showObjectInPyramid(std::vector<std::vector<DetectedObject>> &objectPyramid_);
     void ComputeKeyPointsOctTreeObject(std::vector<std::vector<cv::KeyPoint> >& allKeypoints, std::vector<std::vector<DetectedObject> > &objectPyramid);
-    bool gridInObjectBox(std::vector<DetectedObject> &objectPyramid, cv::Rect grid, float areaTh);
 };
 
 } //namespace ORB_SLAM
