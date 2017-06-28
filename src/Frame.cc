@@ -59,8 +59,9 @@ Frame::Frame(const Frame &frame)
      mpReferenceKF(frame.mpReferenceKF), mnScaleLevels(frame.mnScaleLevels),
      mfScaleFactor(frame.mfScaleFactor), mfLogScaleFactor(frame.mfLogScaleFactor),
      mvScaleFactors(frame.mvScaleFactors), mvInvScaleFactors(frame.mvInvScaleFactors),
-     mvLevelSigma2(frame.mvLevelSigma2), mvInvLevelSigma2(frame.mvInvLevelSigma2)
-     //mvObjects(frame.mvObjects), mpDetector(frame.mpDetector)
+     mvLevelSigma2(frame.mvLevelSigma2), mvInvLevelSigma2(frame.mvInvLevelSigma2),
+     mvObjects(frame.mvObjects), mvkpsInObject(frame.mvkpsInObject), mvObjectId(frame.mvObjectId),
+     mvdescriptorsInObject(frame.mvdescriptorsInObject)
 {
     for(int i=0;i<FRAME_GRID_COLS;i++)
         for(int j=0; j<FRAME_GRID_ROWS; j++)
@@ -203,19 +204,24 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
 
     ExtractORB(0, imGray);
 
-    N = mvKeys.size();
+    UndistortKeyPoints();
 
     if(mvKeys.empty())
         return;
 
-    UndistortKeyPoints();
+    mvObjects = objects;
 
+    mvObjectId.resize(mvObjects.size(), -1);
+
+    reOrgnizeFeature();
+    // unlabeled number of kps
+    N = mvKeysUn.size() - Nlabeled;
     // Set no stereo information
-    mvuRight = vector<float>(N,-1);
-    mvDepth = vector<float>(N,-1);
+    mvuRight = vector<float>(N + Nlabeled,-1);
+    mvDepth = vector<float>(N + Nlabeled,-1);
 
-    mvpMapPoints = vector<MapPoint*>(N,static_cast<MapPoint*>(NULL));
-    mvbOutlier = vector<bool>(N,false);
+    mvpMapPoints = vector<MapPoint*>(N + Nlabeled,static_cast<MapPoint*>(NULL));
+    mvbOutlier = vector<bool>(N + Nlabeled,false);
 
     // This is done only for the first Frame (or after a change in the calibration)
     if(mbInitialComputations)
@@ -238,43 +244,114 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
     mb = mbf/fx;
 
     AssignFeaturesToGrid();
-
-    mvObjects = objects;
-
-    reOrgnizeFeature();
 }
 
-void Frame::reOrgnizeFeature(){
+void Frame::reOrgnizeFeature()
+{
 
+    // add label to kps and divide related kps, descriptors
+    std::vector<cv::KeyPoint> kpsIn, kpsInUn;
+    std::vector<size_t> Inidx;
+    std::vector<size_t> InidxUn;
+    for(size_t i = 0; i < mvKeys.size(); i++)
+    {
+        for(size_t j = 0; j < mvObjects.size(); j++)
+        {
+            DetectedObject curObjects = mvObjects.at(j);
+            bool done1 = false, done2 = false;
+            if(curObjects.bounding_box.contains(mvKeys.at(i).pt))
+            {
+                mvKeys.at(i).class_id = curObjects.object_class;
+                kpsIn.push_back(mvKeys.at(i));
+                Inidx.push_back(i);
+                done1 = true;
+            }
+
+            if(curObjects.bounding_box.contains(mvKeysUn.at(i).pt))
+            {
+                mvKeysUn.at(i).class_id = curObjects.object_class;
+                kpsInUn.push_back(mvKeys.at(i));
+                InidxUn.push_back(i);
+                done2 = true;
+            }
+
+            if(done1||done2)
+                break;
+        }
+    }
+    //des
+    cv::Mat descriptorIn = cv::Mat::zeros((int)kpsIn.size(), 32, 0);
+    for(size_t i = 0; i < kpsIn.size(); i++)
+    {
+        mDescriptors.row(Inidx.at(i)).copyTo(descriptorIn.row(i));
+    }
+
+    cv::Mat descriptorInUn = cv::Mat::zeros((int)kpsInUn.size(), 32, 0);
+    for(size_t i = 0; i < kpsInUn.size(); i++)
+    {
+        mDescriptors.row(InidxUn.at(i)).copyTo(descriptorInUn.row(i));
+    }
+
+    Nlabeled = (int)kpsInUn.size();
+    // divide kps to vector for each object, only using undistorted keyPoints
+    std::vector<int> InObject(kpsInUn.size(), -1);
+    std::vector<bool> done(kpsIn.size(), false);
     mvkpsInObject.resize(mvObjects.size());
     mvdescriptorsInObject.resize(mvObjects.size());
 
-    for(int i = 0; i < mvKeys.size(); i++){
-        for(int j = 0; j < mvObjects.size(); j++){
-            DetectedObject curObjects = mvObjects[j];
-            if(curObjects.bounding_box.contains(mvKeys[i].pt))
+    for(size_t iObject=0; iObject < mvObjects.size(); iObject++)
+    {
+        // keyPoints
+        std::vector<cv::KeyPoint>& kpsInObject = mvkpsInObject.at(iObject);
+
+        DetectedObject currentObject = mvObjects[iObject];
+        cv::Rect box = currentObject.bounding_box;
+        size_t nKPInobject = 0;
+
+        for(size_t iKps = 0; iKps < kpsInUn.size(); iKps++)
+        {
+            if(InObject[iKps] != -1)
+                continue;
+
+            if(done.at(iKps))
+                continue;
+
+            cv::Point p(kpsInUn.at(iKps).pt);
+            if(box.contains(p))
             {
-                mvKeys[i].class_id = curObjects.object_class;
-
+                kpsInObject.push_back(kpsInUn.at(iKps));
+                InObject[iKps] = (int)iObject;
+                nKPInobject++;
+                done.at(iKps) = true;
             }
-
-            if(curObjects.bounding_box.contains(mvKeysUn[i].pt))
-            {
-                mvKeysUn[i].class_id = curObjects.object_class;
-            }
-
+            else
+                continue;
         }
+        // descriptors
+        cv::Mat objectDescriptor = cv::Mat::zeros((int)nKPInobject, 32, CV_8UC1);
+        int nidescriptor = 0;
+        for(size_t i=0; i<InObject.size(); i++)
+        {
+            if(InObject[i] != (int)iObject)
+                continue;
+
+            descriptorInUn.row(i).copyTo(objectDescriptor.row(nidescriptor));
+            nidescriptor++;
+        }
+        mvdescriptorsInObject.at(iObject) = objectDescriptor;
     }
+
 }
 
 void Frame::AssignFeaturesToGrid()
 {
-    int nReserve = 0.5f*N/(FRAME_GRID_COLS*FRAME_GRID_ROWS);
+    int n = (int)mvKeys.size();
+    int nReserve = 0.5f*n/(FRAME_GRID_COLS*FRAME_GRID_ROWS);
     for(unsigned int i=0; i<FRAME_GRID_COLS;i++)
         for (unsigned int j=0; j<FRAME_GRID_ROWS;j++)
             mGrid[i][j].reserve(nReserve);
 
-    for(int i=0;i<N;i++)
+    for(int i=0;i<n;i++)
     {
         const cv::KeyPoint &kp = mvKeysUn[i];
 
@@ -367,7 +444,7 @@ bool Frame::isInFrustum(MapPoint *pMP, float viewingCosLimit)
 vector<size_t> Frame::GetFeaturesInArea(const float &x, const float  &y, const float  &r, const int minLevel, const int maxLevel) const
 {
     vector<size_t> vIndices;
-    vIndices.reserve(N);
+    vIndices.reserve(N + Nlabeled);
 
     const int nMinCellX = max(0,(int)floor((x-mnMinX-r)*mfGridElementWidthInv));
     if(nMinCellX>=FRAME_GRID_COLS)
@@ -449,9 +526,10 @@ void Frame::UndistortKeyPoints()
         return;
     }
 
+    int n = mvKeys.size();
     // Fill matrix with points
-    cv::Mat mat(N,2,CV_32F);
-    for(int i=0; i<N; i++)
+    cv::Mat mat(n,2,CV_32F);
+    for(int i=0; i<n; i++)
     {
         mat.at<float>(i,0)=mvKeys[i].pt.x;
         mat.at<float>(i,1)=mvKeys[i].pt.y;
@@ -463,8 +541,8 @@ void Frame::UndistortKeyPoints()
     mat=mat.reshape(1);
 
     // Fill undistorted keypoint vector
-    mvKeysUn.resize(N);
-    for(int i=0; i<N; i++)
+    mvKeysUn.resize(n);
+    for(int i=0; i<n; i++)
     {
         cv::KeyPoint kp = mvKeys[i];
         kp.pt.x=mat.at<float>(i,0);
@@ -723,56 +801,5 @@ void Frame::SetCameraParameters(cv::Mat &K, cv::Mat &DistCoef){
     K.copyTo(mK);
     DistCoef.copyTo(mDistCoef);
 }
-
-reorganizeORB(std::vector<KeyPoint> KpsIn, Mat descriptorsIn, std::vector<DetectedObject> ObjectBox)
-{
-    //    std::cout << "whole: " << descriptorsIn << std::endl << std::endl << std::endl;
-    std::vector<int> InObject(KpsIn.size(), -1);
-    vkpsInObject = new std::vector<std::vector<cv::KeyPoint>>(ObjectBox.size());
-    vdescriptorsInObject = new std::vector<cv::Mat>(ObjectBox.size());
-
-    for(size_t iObject=0; iObject < ObjectBox.size(); iObject++)
-    {
-        // keyPoints
-        std::vector<KeyPoint>& kpsInObject = vkpsInObject->at(iObject);
-
-        DetectedObject currentObject = ObjectBox[iObject];
-        cv::Rect box = currentObject.bounding_box;
-        size_t nKPInobject = 0;
-
-        for(size_t iKps = 0; iKps < KpsIn.size(); iKps++)
-        {
-            if(InObject[iKps] != -1)
-                continue;
-
-            cv::Point p(KpsIn[iKps].pt);
-            if(box.contains(p))
-            {
-                kpsInObject.push_back(KpsIn[iKps]);
-                InObject[iKps] = (int)iObject;
-                nKPInobject++;
-            }
-            else
-                continue;
-        }
-        // descriptors
-        cv::Mat objectDescriptor = Mat::zeros((int)nKPInobject, 32, CV_8UC1);
-        int nidescriptor = 0;
-        for(size_t i=0; i<InObject.size(); i++)
-        {
-            if(InObject[i] != (int)iObject)
-                continue;
-
-            //            std::cout << i << " " << descriptorsIn.row(i) << std::endl << std::endl;
-
-            descriptorsIn.row(i).copyTo(objectDescriptor.row(nidescriptor));
-            nidescriptor++;
-        }
-        //        std::cout << objectDescriptor << std::endl;
-        vdescriptorsInObject->at(iObject) = objectDescriptor;
-    }
-
-}
-
 
 } //namespace ORB_SLAM

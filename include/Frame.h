@@ -147,10 +147,12 @@ public:
     float mThDepth;
 
     // Number of KeyPoints.
-    int N;
+    int N;//unlabeled
+    int Nlabeled;
 
     //vector of objects in this frame
     std::vector<DetectedObject> mvObjects;
+    std::vector<int> mvObjectId;
     std::vector<std::vector<cv::KeyPoint>> mvkpsInObject;
     std::vector<cv::Mat> mvdescriptorsInObject;
 
