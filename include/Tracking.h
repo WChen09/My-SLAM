@@ -39,7 +39,7 @@
 #include "System.h"
 #include "Thirdparty/darknet/src/yolo.h"
 #include <mutex>
-
+#include "ObjectTracking.h"
 namespace ORB_SLAM2
 {
 
@@ -74,6 +74,7 @@ public:
     // Use this function if you have deactivated local mapping and you only want to localize the camera.
     void InformOnlyTracking(const bool &flag);
 
+    void ObjectTracking();
 
 public:
 
@@ -115,6 +116,14 @@ public:
 
     void Reset();
 
+    //object tracking variables
+//    std::vector<std::pair<int, std::vector<MapPoint*>>>* ObjectsIdWithMps;
+//    std::vector<bool>* ObjectStates;
+//    std::vector<int>* ObjectObserveTimes;
+//    std::vector<int>* ObjectUnobserveTimes;
+    int nObjects;
+    float nMPsMatchedTh;
+    Frame mLastFrame;
 protected:
 
     // Main tracking function. It is independent of the input sensor.
@@ -143,6 +152,19 @@ protected:
 
     bool NeedNewKeyFrame();
     void CreateNewKeyFrame();
+
+    void ProjectLastObjectsInCurrent(const cv::Mat Tcl, std::vector<std::vector<cv::Mat> > &LastObjectsBox, std::vector<DetectedObject> &_LastObjects, std::vector<DetectedObject> &_LastObjectsInCurrent);
+    void TrackLastObjects(std::vector<int>& _assignment, const float nMatchesRatio, std::vector<DetectedObject> &lastObjectProInCurrent);
+    void UpdateTrackObject(std::vector<int> &_assignment);
+    void FirstTrack();
+    void computeTInLast(cv::Mat& Tcl, cv::Mat& Tlc);
+    void ComputeObjectDepth(const std::vector<MapPoint*> MPs, float &depth);
+    void ComputeObjectBoxCorner(std::vector<DetectedObject>& Objects, std::vector<std::vector<cv::Mat>>& CornerPose, std::vector<float>& Depth);
+    void updateObjectMapPoints();
+    cv::Point3f ComputeObjectPose(std::vector<MapPoint *> &MPs);
+    float meadianBlurMean(std::vector<float>& P);
+
+    void PCLStatisticalFilter(std::vector<MapPoint*> &InMps, std::vector<MapPoint*> &OutMps);
 
     // In case of performing only localization, this flag is true when there are no matches to
     // points in the map. Still tracking will continue if there are enough matches with temporal points.
@@ -203,7 +225,7 @@ protected:
 
     //Last Frame, KeyFrame and Relocalisation Info
     KeyFrame* mpLastKeyFrame;
-    Frame mLastFrame;
+
     unsigned int mnLastKeyFrameId;
     unsigned int mnLastRelocFrameId;
 
@@ -214,6 +236,14 @@ protected:
     bool mbRGB;
 
     list<MapPoint*> mlpTemporalPoints;
+
+    // object bag
+    std::vector<std::vector<MapPoint*>> mvvObjectMps;
+    std::vector<cv::Point3f> mvObjectPose;
+    std::set<int> msObjectId;
+    std::vector<bool> mvObjectMoving;
+    std::vector<int> mvObjectObserveTimes;
+
 };
 
 } //namespace ORB_SLAM

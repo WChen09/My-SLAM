@@ -41,6 +41,9 @@ MapPoint::MapPoint(const cv::Mat &Pos, int FirstKFid, int FirstFrame, Map* pMap)
     // MapPoints can be created from Tracking and Local Mapping. This mutex avoid conflicts with id.
     unique_lock<mutex> lock(mpMap->mMutexPointCreation);
     mnId=nNextId++;
+
+    mnClassId = -1;
+    mnObjectId = -1;
 }
 
 MapPoint::MapPoint(const cv::Mat &Pos, KeyFrame *pRefKF, Map* pMap):
@@ -55,6 +58,9 @@ MapPoint::MapPoint(const cv::Mat &Pos, KeyFrame *pRefKF, Map* pMap):
     // MapPoints can be created from Tracking and Local Mapping. This mutex avoid conflicts with id.
     unique_lock<mutex> lock(mpMap->mMutexPointCreation);
     mnId=nNextId++;
+
+    mnClassId = -1;
+    mnObjectId = -1;
 }
 
 MapPoint::MapPoint(const cv::Mat &Pos, Map* pMap, Frame* pFrame, const int &idxF):
@@ -82,6 +88,9 @@ MapPoint::MapPoint(const cv::Mat &Pos, Map* pMap, Frame* pFrame, const int &idxF
     // MapPoints can be created from Tracking and Local Mapping. This mutex avoid conflicts with id.
     unique_lock<mutex> lock(mpMap->mMutexPointCreation);
     mnId=nNextId++;
+
+    mnClassId = -1;
+    mnObjectId = -1;
 }
 
 void MapPoint::SetWorldPos(const cv::Mat &Pos)
@@ -434,9 +443,24 @@ int MapPoint::PredictScale(const float &currentDist, Frame* pF)
     return nScale;
 }
 
-//void MapPoint::setLabelClass(const int &class_)
-//{
-//    mnObjectClass = class_;
-//}
+void MapPoint::setClassId(const int &class_)
+{
+    mnClassId = class_;
+}
+
+void MapPoint::setObjectId(const int &objectId)
+{
+    mnObjectId = objectId;
+}
+
+int MapPoint::getClassId()
+{
+    return mnClassId;
+}
+
+int MapPoint::getObjectId()
+{
+    return mnObjectId;
+}
 
 } //namespace ORB_SLAM

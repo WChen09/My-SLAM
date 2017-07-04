@@ -57,18 +57,11 @@ int main(int argc, char **argv)
     int nImages = vstrImageFilenames.size();
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    ORB_SLAM2::System* SLAM;
-   try
-    {
-        SLAM = new ORB_SLAM2::System(argv[1],argv[2],argv[3],ORB_SLAM2::System::MONOCULAR,true);
 
-    }
-    catch(bad_alloc)
-    {
-        std::cout << "bad_alloc" <<  std::endl;
-        exit(0);
-    }
-        // Vector for tracking time statistics
+    ORB_SLAM2::System SLAM(argv[1],argv[2],argv[3],ORB_SLAM2::System::MONOCULAR,true);
+
+
+    // Vector for tracking time statistics
     vector<float> vTimesTrack;
     vTimesTrack.resize(nImages);
     cout << endl << "-------" << endl;
@@ -101,7 +94,7 @@ int main(int argc, char **argv)
 #endif
 
         // Pass the image to the SLAM system
-        SLAM->TrackMonocular(im,tframe);
+        SLAM.TrackMonocular(im,tframe);
 
 #ifdef COMPILEDWITHC11
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
@@ -111,7 +104,7 @@ int main(int argc, char **argv)
 
         double ttrack= std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count();
 
-        std::cout << "Tracking this frame costs: " << ttrack << "seconds" << endl;
+        std::cout << "Tracking this frame costs: " << ttrack << "seconds" << endl << endl;
         vTimesTrack[ni]=ttrack;
 
         timeRecordfile << ttrack << endl;
@@ -129,13 +122,13 @@ int main(int argc, char **argv)
     timeRecordfile.close();
 
     // Stop all threads
-    SLAM->Shutdown();
+    SLAM.Shutdown();
 
     //saving map
-    const string path = SLAM->GetMapPath();
+    const string path = SLAM.GetMapPath();
     if(path.compare("Localization") != 0){
         std::cout << "Saving Map" << std::endl;
-        SLAM->SaveMap(path);
+        SLAM.SaveMap(path);
         std::cout << "Map saving done!"<< std::endl;
     }
     // Tracking time statistics
@@ -150,8 +143,7 @@ int main(int argc, char **argv)
     cout << "mean tracking time: " << totaltime/nImages << endl;
 
     // Save camera trajectory
-    SLAM->SaveTrajectoryKITTI("KeyFrameTrajectory.txt");
-    delete SLAM;
+    SLAM.SaveTrajectoryKITTI("KeyFrameTrajectory.txt");
     return 0;
 }
 

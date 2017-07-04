@@ -290,6 +290,11 @@ int Optimizer::PoseOptimization(Frame *pFrame)
 
                 Eigen::Matrix<double,2,1> obs;
                 const cv::KeyPoint &kpUn = pFrame->mvKeysUn[i];
+
+                // not include labeled Kps
+                if(kpUn.class_id != -1)
+                    continue;
+
                 obs << kpUn.pt.x, kpUn.pt.y;
 
                 g2o::EdgeSE3ProjectXYZOnlyPose* e = new g2o::EdgeSE3ProjectXYZOnlyPose();

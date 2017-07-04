@@ -55,9 +55,13 @@ Viewer.ViewpointY: -10
 Viewer.ViewpointZ: -0.1
 Viewer.ViewpointF: 2000
 
+# Object Mps match retio
+nMPsMatchedTh: 0.3
+
 # SLAM 1 or Localization ONLY 0
 SLAM: 1
 MapPath: "./map.bin"
+
 
 
 

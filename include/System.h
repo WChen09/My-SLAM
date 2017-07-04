@@ -129,6 +129,8 @@ public:
 
     int SLAM;
 
+    void funeTuneObjects(std::vector<DetectedObject>& objects);
+
 private:
 
     // Input sensor

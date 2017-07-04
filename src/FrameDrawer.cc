@@ -44,6 +44,10 @@ cv::Mat FrameDrawer::DrawFrame()
     vector<bool> vbVO, vbMap; // Tracked MapPoints in current frame
     int state; // Tracking state
     std::vector<DetectedObject> objects;
+    std::vector<int> objectsId;
+    std::vector<int> MPsObjectId;
+    std::vector<DetectedObject> lastObjects;
+    std::vector<int> lastObjectId;
 
     //Copy variables within scoped mutex
     {
@@ -54,7 +58,11 @@ cv::Mat FrameDrawer::DrawFrame()
 
         mIm.copyTo(im);
 
-//        objects = mvCurrentObjects;
+        objects = mvCurrentObjects;
+        objectsId = mvObjectsId;
+        MPsObjectId = mvMPsId;
+        lastObjects = mvLastInCurrent;
+        lastObjectId = mvLastObjectId;
 
         if(mState==Tracking::NOT_INITIALIZED)
         {
@@ -110,7 +118,7 @@ cv::Mat FrameDrawer::DrawFrame()
                 // This is a match to a MapPoint in the map
                 if(vbMap[i])
                 {
-                    if(vCurrentKeys[i].class_id != -1)
+                    if(MPsObjectId[i]!= -1)
                     {
                         cv::rectangle(im,pt1,pt2,cv::Scalar(255,0,255));//magenta color
                         cv::circle(im,vCurrentKeys[i].pt,2,cv::Scalar(255,0,255),-1);
@@ -145,7 +153,7 @@ cv::Mat FrameDrawer::DrawFrame()
 
                 }
             }
-        }/*
+        }
         for(int i = 0; i < objects.size(); i++)
         {
             DetectedObject& o = objects[i];
@@ -155,9 +163,22 @@ cv::Mat FrameDrawer::DrawFrame()
 
             char str[255];
             //sprintf(str,"%s %f", names[o.object_class], o.prob);
-            sprintf(str,"%s %%%.2f", class_name.c_str(), o.prob);
+            sprintf(str,"%d", objectsId.at(i));
             cv::putText(im, str, cv::Point2f(o.bounding_box.x,o.bounding_box.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,0,255), 1);
-        }*/
+        }
+
+        for(size_t i = 0; i < lastObjects.size(); i++)
+        {
+            DetectedObject o = lastObjects.at(i);
+            cv::rectangle(im, o.bounding_box, cv::Scalar(0,250,250), 2);
+
+            string class_name = names[o.object_class];
+
+            char str[255];
+            //sprintf(str,"%s %f", names[o.object_class], o.prob);
+            sprintf(str,"%d", lastObjectId.at(i));
+            cv::putText(im, str, cv::Point2f(o.bounding_box.x,o.bounding_box.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,0,255), 1);
+        }
     }
 
     cv::Mat imWithInfo;
@@ -183,8 +204,8 @@ void FrameDrawer::DrawTextInfo(cv::Mat &im, int nState, cv::Mat &imText)
         int nKFs = mpMap->KeyFramesInMap();
         int nMPs = mpMap->MapPointsInMap();
 //        int nLabeledMPs = mpMap->mnLabeledMP;
-        s << "GMAP [KFs: " << nKFs << ", MPs: " << nMPs //<< ", labeled: " << nLabeledMPs << ", ratio: "  << float(nLabeledMPs)/float(nMPs) << "]  "
-          << "LMAP [Matches: " << mnTracked; //<< ", labeled: " << mnlabeled << ", ratio: " << float(mnlabeled)/float(mnTracked) << "]";
+        s << "GMAP [KFs: " << nKFs << ", MPs: " << nMPs << "]  "
+          << "LMAP [Matches: " << mnTracked << ", labeled Kps: " << NIn << ", ratio: "  << float(NIn)/float(N) << "]";
         if(mnTrackedVO>0)
             s << ", + VO matches: " << mnTrackedVO;
     }
@@ -213,10 +234,15 @@ void FrameDrawer::Update(Tracking *pTracker)
     pTracker->mImGray.copyTo(mIm);
     mvCurrentKeys=pTracker->mCurrentFrame.mvKeys;
     N = mvCurrentKeys.size();
+    NIn = pTracker->mCurrentFrame.Nlabeled;
     mvbVO = vector<bool>(N,false);
     mvbMap = vector<bool>(N,false);
     mbOnlyTracking = pTracker->mbOnlyTracking;
-//    mvCurrentObjects = pTracker->mCurrentFrame.mvObjects;
+    mvCurrentObjects = pTracker->mCurrentFrame.mvObjects;
+    mvObjectsId = pTracker->mCurrentFrame.mvObjectId;
+    mvMPsId = pTracker->mCurrentFrame.mvMapPointsId;
+    mvLastInCurrent = pTracker->mLastFrame.mvLastObjectProInCurrent;
+    mvLastObjectId = pTracker->mLastFrame.mvObjectId;
 
     if(pTracker->mLastProcessedState==Tracking::NOT_INITIALIZED)
     {

@@ -48,6 +48,16 @@ public:
     void InformNewBigChange();
     int GetLastBigChangeIdx();
 
+//    void SetObjectMapPoints(const int n);
+//    int GetALLObjectMPs();
+
+    void SetObjectMapPoints(const std::vector<std::vector<MapPoint *> > &vvMps);
+    std::vector<std::vector<MapPoint*>> GetObjectMapPoints();
+    void emptyObject();
+
+    void SetObjectPose(const std::vector<cv::Point3f>& vPose);
+    std::vector<cv::Point3f> GetObjectPose();
+
     std::vector<KeyFrame*> GetAllKeyFrames();
     std::vector<MapPoint*> GetAllMapPoints();
     std::vector<MapPoint*> GetReferenceMapPoints();
@@ -70,6 +80,10 @@ public:
 
     bool Save(const string &filename);
     bool Load(const string &filename, ORBVocabulary &voc, const string &settingFile);
+
+    std::vector<std::vector<MapPoint*>> mvvObjectMapPoints;
+    std::vector<cv::Point3f> mvObjectPose;
+    int mnObjects;
 
 protected:
     std::set<MapPoint*> mspMapPoints;

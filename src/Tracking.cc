@@ -40,6 +40,10 @@
 #include "unistd.h"
 #include<assert.h>
 
+#include <pcl/point_types.h>
+#include <pcl/filters/statistical_outlier_removal.h>
+#include <pcl/visualization/cloud_viewer.h>
+
 
 using namespace std;
 
@@ -159,6 +163,11 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
             mDepthMapFactor = 1.0f/mDepthMapFactor;
     }
 
+
+    nMPsMatchedTh = fSettings["nMPsMatchedTh"];
+    std::cout << nMPsMatchedTh << std::endl;
+    nObjects = 0;
+
 }
 
 void Tracking::SetLocalMapper(LocalMapping *pLocalMapper)
@@ -253,19 +262,19 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp,
     mImGray = im;
 
     //if object area over threshold obth, return last pose
-//    float obth = 0.3;
+    //    float obth = 0.3;
     int wholeArea = 0, objectArea = 0;
     wholeArea = im.cols * im.rows;
-    std::cout << " detect " << objects.size() << " objects: " << "[class, prob, areaRatio]" << std::endl;
+    std::cout << " detect " << objects.size() << " objects: " << "[class, prob, areaRatio]" << " ";
     for(int i = 0; i < objects.size(); i++){
         DetectedObject currO = objects[i];
         objectArea += currO.bounding_box.area();
         std::cout << "  [" << currO.object_class << ", " << currO.prob << ", " << float(currO.bounding_box.area())/float(wholeArea) << "] ";
     }
-    std::cout << std::endl << "whole Area ratio: " << float(objectArea)/float(wholeArea) << endl;
-////    if(objectArea/wholeArea > obth){
-////        return mLastFrame.mTcw.clone();
-////    }
+    //    std::cout << std::endl << "whole Area ratio: " << float(objectArea)/float(wholeArea) << endl;
+    //        if(objectArea/wholeArea > obth){
+    //            return mLastFrame.mTcw.clone();
+    //        }
 
     if(mImGray.channels()==3)
     {
@@ -449,7 +458,8 @@ void Tracking::Track()
             mState=LOST;
 
         // Update drawer
-        mpFrameDrawer->Update(this);
+        if(mSensor != System::MONOCULAR)
+            mpFrameDrawer->Update(this);
 
         // If tracking were good, check if we insert a keyframe
         if(bOK)
@@ -480,6 +490,7 @@ void Tracking::Track()
                         mCurrentFrame.mvpMapPoints[i]=static_cast<MapPoint*>(NULL);
                     }
             }
+
             // for monocular case, mlpTemporalPoints is empty
             // Delete temporal MapPoints
             for(list<MapPoint*>::iterator lit = mlpTemporalPoints.begin(), lend =  mlpTemporalPoints.end(); lit!=lend; lit++)
@@ -504,6 +515,15 @@ void Tracking::Track()
             }
         }
 
+        // Object tracking
+        if(mState == OK)
+        {
+            ObjectTracking(); // update MPs object id
+            updateObjectMapPoints();
+//            mpMap->SetObjectMapPoints(nObjects);
+            mpMap->SetObjectMapPoints(mvvObjectMps);
+            mpMap->SetObjectPose(mvObjectPose);
+        }
         // Reset if the camera get lost soon after initialization
         if(mState==LOST)
         {
@@ -517,6 +537,8 @@ void Tracking::Track()
 
         if(!mCurrentFrame.mpReferenceKF)
             mCurrentFrame.mpReferenceKF = mpReferenceKF;
+
+        mpFrameDrawer->Update(this);
 
         mLastFrame = Frame(mCurrentFrame);
     }
@@ -538,6 +560,8 @@ void Tracking::Track()
         mlFrameTimes.push_back(mlFrameTimes.back());
         mlbLost.push_back(mState==LOST);
     }
+
+
 
 }
 
@@ -695,11 +719,11 @@ void Tracking::CreateInitialMapMonocular()
 
         MapPoint* pMP = new MapPoint(worldPos,pKFcur,mpMap);
 
-//        // set label to MapPoints
-//        const cv::KeyPoint &kp2 = pKFcur->mvKeysUn[i];
-//        if(kp2.class_id != -1){
-//            pMP->setLabelClass(kp2.class_id);
-//        }
+        //        // set label to MapPoints
+        //        const cv::KeyPoint &kp2 = pKFcur->mvKeysUn[i];
+        //        if(kp2.class_id != -1){
+        //            pMP->setLabelClass(kp2.class_id);
+        //        }
 
         pKFini->AddMapPoint(pMP,i);
         pKFcur->AddMapPoint(pMP,mvIniMatches[i]);
@@ -930,7 +954,7 @@ bool Tracking::TrackWithMotionModel()
     if(nmatches<20)
     {
         fill(mCurrentFrame.mvpMapPoints.begin(),mCurrentFrame.mvpMapPoints.end(),static_cast<MapPoint*>(NULL));
-        nmatches = matcher.SearchByProjection(mCurrentFrame,mLastFrame,2*th,mSensor==System::MONOCULAR);
+        nmatches = matcher.SearchByProjection(mCurrentFrame,mLastFrame,2*th,mSensor==System::MONOCULAR);// get MapPoints for current frame
     }
     if(nmatches<20)
         return false;
@@ -974,7 +998,7 @@ bool Tracking::TrackLocalMap()
 
     UpdateLocalMap();
 
-    SearchLocalPoints();
+    SearchLocalPoints(); // the second place to add MapPoints for current frame
 
     // Optimize Pose
     Optimizer::PoseOptimization(&mCurrentFrame);
@@ -1070,7 +1094,7 @@ bool Tracking::NeedNewKeyFrame()
     // Condition 1b: More than "MinFrames" have passed and Local Mapping is idle
     const bool c1b = (mCurrentFrame.mnId>=mnLastKeyFrameId+mMinFrames && bLocalMappingIdle);
     //Condition 1c: tracking is weak
-    const bool c1c =  mSensor!=System::MONOCULAR && (mnMatchesInliers<nRefMatches*0.25 || bNeedToInsertClose) ;
+    const bool c1c =  mSensor!=System::MONOCULAR && (mnMatchesInliers<nRefMatches*0.25 || bNeedToInsertClose) ;//mnMatchesInliers is matched mappoints of current frame in local map
     // Condition 2: Few tracked points compared to reference keyframe. Lots of visual odometry compared to map matches.
     const bool c2 = ((mnMatchesInliers<nRefMatches*thRefRatio|| bNeedToInsertClose) && mnMatchesInliers>15);
 
@@ -1261,7 +1285,7 @@ void Tracking::UpdateLocalPoints()
                 continue;
             if(pMP->mnTrackReferenceForFrame==mCurrentFrame.mnId)
                 continue;
-/*            //culling labeled MPs
+            /*            //culling labeled MPs
             if(pMP->mnObjectClass != -1)
                 continue*/;
             if(!pMP->isBad())
@@ -1632,6 +1656,597 @@ void Tracking::InformOnlyTracking(const bool &flag)
     mbOnlyTracking = flag;
 }
 
+void Tracking::ObjectTracking()
+{
+    if(mCurrentFrame.mvObjects.empty() && mLastFrame.mvObjects.empty())
+        return;
+
+    if(nObjects == 0)
+    {
+        // get matching MapPoints for current frame, and change these MapPoints' class_id and object id
+        FirstTrack();
+        return;
+    }
+    else
+    {
+
+        cv::Mat Tcl, Tlc;
+        computeTInLast(Tcl,Tlc);
+
+        ProjectLastObjectsInCurrent(Tcl, mLastFrame.mvvObjectBoxCornerLocationInFrame, mLastFrame.mvObjects, mLastFrame.mvLastObjectProInCurrent);
+
+        std::cout << mLastFrame.mvLastObjectProInCurrent.size() << std::endl;
+
+        size_t N = mLastFrame.mvLastObjectProInCurrent.size();
+        size_t M = mCurrentFrame.mvObjects.size();
+
+        std::vector<int>* assignment = new std::vector<int>(N, -1);
+
+        std::cout << "assignment: " ;
+        for(size_t i = 0; i < N; i++)
+        {
+            std::cout << assignment->at(i) << " ";
+        }
+        std::cout <<std::endl;
+
+        HungarianAssignment(*assignment, mLastFrame.mvLastObjectProInCurrent, mCurrentFrame.mvObjects, 0.8);
+
+        std::cout << "assignment: " ;
+        for(size_t i = 0; i < N; i++)
+        {
+            std::cout << assignment->at(i) << " ";
+        }
+        std::cout <<std::endl;
+
+        //        if(N>=M)
+        TrackLastObjects(*assignment, nMPsMatchedTh, mLastFrame.mvLastObjectProInCurrent);
+
+        UpdateTrackObject(*assignment);
+
+        std::cout << "Current frame objects: " << mCurrentFrame.mvObjects.size() << std::endl;
+        std::cout << "Objects in bag: " << mvvObjectMps.size() << std::endl;
+
+        delete assignment;
+
+    }
+
+}
+
+void Tracking::TrackLastObjects(std::vector<int> &_assignment, const float nMatchesRatio, std::vector<DetectedObject> &lastObjectProInCurrent)
+{
+
+    for(int iLastObject = 0;
+        iLastObject < lastObjectProInCurrent.size(); iLastObject++)
+    {
+        if(_assignment.at(iLastObject)!=-1)
+            continue;
+        DetectedObject lastObject = lastObjectProInCurrent.at(iLastObject);
+        // find MPs in current frame using lastObject
+        std::vector<MapPoint*> vMPsLastInCurrent;
+        for(size_t iMP = 0; iMP < mCurrentFrame.mvpMapPoints.size(); iMP++)
+        {
+            MapPoint* pMP = mCurrentFrame.mvpMapPoints.at(iMP);
+            if(pMP)
+            {
+                if(lastObject.bounding_box.contains(mCurrentFrame.mvKeysUn.at(iMP).pt))
+                    vMPsLastInCurrent.push_back(pMP);
+            }
+        }
+
+        int nCurrentMps = vMPsLastInCurrent.size();
+        int nLastMps = mLastFrame.mvObjectMPs.at(iLastObject).size();
+        int nMatches = 0;
+        std::vector<bool> alreadyMatched(nCurrentMps, false);
+        for(size_t iL = 0; iL < nLastMps; iL++)
+        {
+            for(size_t iC = 0; iC < nCurrentMps; iC++)
+            {
+                if(alreadyMatched.at(iC))
+                    continue;
+
+                if(mLastFrame.mvObjectMPs.at(iLastObject).at(iL) == vMPsLastInCurrent.at(iC))
+                {
+                    alreadyMatched.at(iC) = true;
+                    nMatches++;
+                    break;
+                }
+                else
+                    continue;
+
+            }
+        }
+
+        float nMatchRatio = (float)nMatches/(float)(0.5*nCurrentMps+0.5*nLastMps);
+
+        // < means Lost or have leave current view
+        if(nMatchRatio < nMatchesRatio)
+            continue;
+        else
+        {
+            //update this object and its ID to current frame
+            mCurrentFrame.mvObjects.push_back(lastObject);
+            _assignment.at(iLastObject) = mCurrentFrame.mvObjects.size()-1;
+        }
+    }
+}
+
+void Tracking::UpdateTrackObject(std::vector<int>& _assignment)
+{
+
+    mCurrentFrame.mvObjectId.resize(mCurrentFrame.mvObjects.size());
+    for(size_t i = 0; i < _assignment.size(); i++)
+    {
+        if(_assignment.at(i)!=-1)
+            mCurrentFrame.mvObjectId.at(_assignment.at(i)) = mLastFrame.mvObjectId.at(i);
+    }
+
+    for(size_t i = 0; i < mCurrentFrame.mvObjectId.size(); i++)
+    {
+        if(mCurrentFrame.mvObjectId.at(i) == -1)
+        {
+            mCurrentFrame.mvObjectId.at(i) = nObjects;
+            nObjects++;
+        }
+    }
+
+    //add object id to Mps
+    std::vector<std::vector<MapPoint*>> ObjectMPs(mCurrentFrame.mvObjects.size());
+    for(size_t iMp = 0; iMp < mCurrentFrame.mvpMapPoints.size(); iMp++)
+    {
+        MapPoint* pMP = mCurrentFrame.mvpMapPoints.at(iMp);
+        if(pMP)
+        {
+            for(size_t iObject = 0; iObject < mCurrentFrame.mvObjects.size(); iObject++)
+            {
+                if(mCurrentFrame.mvObjects.at(iObject).bounding_box.contains(mCurrentFrame.mvKeysUn.at(iMp).pt))
+                {
+
+                    mCurrentFrame.mvpMapPoints.at(iMp)->setObjectId(mCurrentFrame.mvObjectId.at(iObject));
+                    mCurrentFrame.mvpMapPoints.at(iMp)->setClassId(mCurrentFrame.mvObjects.at(iObject).object_class);
+                    mCurrentFrame.mvMapPointsId.at(iMp) = mCurrentFrame.mvObjectId.at(iObject);
+
+                    ObjectMPs.at(iObject).push_back(pMP);
+                    //                        std::cout << mCurrentFrame.mvMapPointsId.at(iMp) << " ";
+                }
+            }
+        }
+    }
+
+    // remove the background MPs
+    std::vector<cv::Point3f> ObjectsPose(ObjectMPs.size());
+    for(size_t i = 0; i < ObjectMPs.size(); i++)
+    {
+        std::vector<MapPoint*> iObjectMPs = ObjectMPs.at(i);
+        ObjectsPose.at(i) = ComputeObjectPose(iObjectMPs);
+    }
+
+    // depth
+    std::vector<float> ObjectDepth(ObjectMPs.size(), 0);
+    for(size_t iObject = 0; iObject < ObjectMPs.size(); iObject++)
+    {
+        float Depth = 0;
+        ComputeObjectDepth(ObjectMPs.at(iObject), Depth); //need var limination
+        ObjectDepth.at(iObject) = Depth;
+        std::cout << Depth << " ";
+    }
+
+    std::vector<std::vector<cv::Mat>> ObjectBoxCornerLocation;
+    ComputeObjectBoxCorner(mCurrentFrame.mvObjects, ObjectBoxCornerLocation, ObjectDepth);
+
+    mCurrentFrame.mvvObjectBoxCornerLocationInFrame = ObjectBoxCornerLocation;
+    mCurrentFrame.mvObjectDepth = ObjectDepth;
+    mCurrentFrame.mvObjectMPs = ObjectMPs;
+    mCurrentFrame.mvObjectPose = ObjectsPose;
+
+    //std::cout << std::endl;
+}
+
+void Tracking::FirstTrack()
+{
+    /*
+        1. add these Mps to current frame's object
+    */
+
+    //add object Id
+    for(size_t iObject = 0; iObject < mCurrentFrame.mvObjects.size(); iObject++)
+    {
+        mCurrentFrame.mvObjectId.at(iObject) = nObjects;
+        nObjects++;
+        //        std::cout << mCurrentFrame.mvObjectId.at(iObject);
+    }
+    //    std::cout << std::endl;
+
+    //add object id to Mps
+    std::vector<std::vector<MapPoint*>> ObjectMPs(mCurrentFrame.mvObjects.size());
+
+    for(size_t iMp = 0; iMp < mCurrentFrame.mvpMapPoints.size(); iMp++)
+    {
+        MapPoint* pMP = mCurrentFrame.mvpMapPoints.at(iMp);
+        if(pMP)
+        {
+            for(size_t iObject = 0; iObject < mCurrentFrame.mvObjects.size(); iObject++)
+            {
+                if(mCurrentFrame.mvObjects.at(iObject).bounding_box.contains(mCurrentFrame.mvKeysUn.at(iMp).pt))
+                {
+//                    mCurrentFrame.mvpMapPoints.at(iMp)->setObjectId(mCurrentFrame.mvObjectId.at(iObject));
+//                    mCurrentFrame.mvpMapPoints.at(iMp)->setClassId(mCurrentFrame.mvObjects.at(iObject).object_class);
+//                    mCurrentFrame.mvMapPointsId.at(iMp) = mCurrentFrame.mvObjectId.at(iObject);
+                    //                    std::cout << mCurrentFrame.mvMapPointsId.at(iMp) << " ";
+                    ObjectMPs.at(iObject).push_back(pMP);
+                }
+            }
+        }
+    }
+    //    std::cout << std::endl;
+
+    // --- remove the background MPs
+    // 1. compute the center of objects
+    std::vector<cv::Point3f> ObjectsPose(ObjectMPs.size());
+    for(size_t i = 0; i < ObjectMPs.size(); i++)
+    {
+        std::vector<MapPoint*> iObjectMPs = ObjectMPs.at(i);
+        ObjectsPose.at(i) = ComputeObjectPose(iObjectMPs);
+
+        std::vector<MapPoint*> iObjectMPs_filter;
+        PCLStatisticalFilter(iObjectMPs, iObjectMPs_filter);
+    }
+    // 2. PCL remove
 
 
+
+    // depth
+    std::vector<float> ObjectDepth(ObjectMPs.size(), 0);
+    for(size_t iObject = 0; iObject < ObjectMPs.size(); iObject++)
+    {
+        float Depth = 0;
+        ComputeObjectDepth(ObjectMPs.at(iObject), Depth); //add medianBlur
+        ObjectDepth.at(iObject) = Depth;
+        std::cout << Depth << " ";
+
+    }
+
+    std::vector<std::vector<cv::Mat>> ObjectBoxCornerLocation;
+    ComputeObjectBoxCorner(mCurrentFrame.mvObjects, ObjectBoxCornerLocation, ObjectDepth);
+
+    //    std::cout << "Box corners: " << std::endl;
+    //    for(int i = 0; i < ObjectBoxCornerLocation.size(); i++)
+    //    {
+    //        std::cout << std::endl;
+    //        for(int j = 0; j < ObjectBoxCornerLocation.at(i).size(); j++)
+    //        {
+    //            std::cout << ObjectBoxCornerLocation.at(i).at(j) << " " << std::endl;
+    //        }
+    //    }
+    //    std::cout << std::endl;
+
+    mCurrentFrame.mvvObjectBoxCornerLocationInFrame = ObjectBoxCornerLocation;
+    mCurrentFrame.mvObjectDepth = ObjectDepth;
+    mCurrentFrame.mvObjectMPs = ObjectMPs;
+    mCurrentFrame.mvObjectPose = ObjectsPose;
+
+}
+
+void Tracking::PCLStatisticalFilter(std::vector<MapPoint *> &InMps, std::vector<MapPoint *> &OutMps)
+{
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    cloud->width = (int)InMps.size();
+    cloud->height = 1;
+    
+    for(size_t iMp = 0; iMp < InMps.size(); iMp++)
+    {
+        MapPoint* mp = InMps.at(iMp);
+        cv::Mat x3Dw = mp->GetWorldPos();
+        cloud->points.push_back(pcl::PointXYZ(x3Dw.at<float>(0),x3Dw.at<float>(1),x3Dw.at<float>(2)));
+//        cloud->points.at(iMp).x = x3Dw.at<float>(0);
+//        cloud->points.at(iMp).y = x3Dw.at<float>(1);
+//        cloud->points.at(iMp).z = x3Dw.at<float>(2);
+    }
+
+//    std::cout << *cloud << std::endl;
+    pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
+    sor.setInputCloud (cloud);
+    sor.setMeanK(5);
+    sor.setStddevMulThresh(1.0);
+    pcl::PointCloud<pcl::PointXYZ> cloudOut;
+    sor.setNegative (true);
+    sor.filter(cloudOut);
+//    std::cout << cloudOut << std::endl;
+    std::vector<pcl::PointXYZ> outliers = cloudOut.points;
+    std::vector<bool> judged(outliers.size(), false);
+    std::vector<pcl::PointXYZ> in = cloud->points;
+    for(size_t i = 0; i < in.size(); i++)
+    {
+        pcl::PointXYZ inP = in.at(i);
+        for(size_t j = 0; j < outliers; j++)
+        {
+//              if(inP. ==)
+        }
+    }
+
+}
+
+cv::Point3f Tracking::ComputeObjectPose(std::vector<MapPoint *> &MPs)
+{
+    if(MPs.size() == 0)
+    {
+        return cv::Point3f(0,0,0);
+    }
+
+    std::vector<float> x(MPs.size(), 0);
+    std::vector<float> y(MPs.size(), 0);
+    std::vector<float> z(MPs.size(), 0);
+
+    for(int iMp = 0; iMp < MPs.size(); iMp++)
+    {
+        MapPoint* pMp = MPs.at(iMp);
+        cv::Mat x3Dw = pMp->GetWorldPos();
+        x.at(iMp) = x3Dw.at<float>(0);
+        y.at(iMp) = x3Dw.at<float>(1);
+        z.at(iMp) = x3Dw.at<float>(2);
+    }
+
+    float xMean = meadianBlurMean(x);
+    float yMean = meadianBlurMean(y);
+    float zMean = meadianBlurMean(z);
+
+    return cv::Point3f(xMean, yMean, zMean);
+}
+
+float Tracking::meadianBlurMean(std::vector<float> &P)
+{
+
+    cv::Mat mP(P.size(), 1, CV_32F);
+    for(size_t i = 0; i < P.size(); i++)
+    {
+        mP.at<float>(i) = P.at(i);
+    }
+    cv::Mat mPBlur;
+    cv::medianBlur(mP, mPBlur, 3);
+
+    cv::Mat m;
+    cv::meanStdDev(mPBlur, m, cv::Mat());
+
+    return m.at<double>(0);
+}
+
+void Tracking::computeTInLast(cv::Mat &Tcl, cv::Mat &Tlc)
+{
+    const cv::Mat Rcw = mCurrentFrame.mTcw.rowRange(0,3).colRange(0,3); //3x3
+    const cv::Mat tcw = mCurrentFrame.mTcw.rowRange(0,3).col(3); //3x1
+
+    const cv::Mat twc = -Rcw.t()*tcw; // 3x1  R_INV = R.t, but T_INV != T.t
+
+    const cv::Mat Rlw = mLastFrame.mTcw.rowRange(0,3).colRange(0,3);
+    const cv::Mat tlw = mLastFrame.mTcw.rowRange(0,3).col(3);
+    //vector from LastFrame to CurrentFrame expressed in LastFrame
+    const cv::Mat tlc = Rlw*twc+tlw;// Rlw*twc(w) = twc(l), tlc(l) = twc(l) + tlw(l)
+    const cv::Mat Rlc = Rlw*Rcw.t();
+
+    Tlc = cv::Mat::eye(4,4,mCurrentFrame.mTcw.type());
+    Tcl = cv::Mat::eye(4,4,mCurrentFrame.mTcw.type());
+
+    Rlc.copyTo(Tlc.rowRange(0,3).colRange(0,3));
+    tlc.copyTo(Tlc.rowRange(0,3).col(3));
+
+    const cv::Mat tcl = -Rlc.t()*tlc;
+    const cv::Mat Rcl = Rlc.t();
+
+    tcl.copyTo(Tcl.rowRange(0,3).col(3));
+    Rcl.copyTo(Tcl.rowRange(0,3).colRange(0,3));
+}
+
+void Tracking::ComputeObjectDepth(const std::vector<MapPoint *> MPs, float & depth)
+{
+    const cv::Mat Rcw = mCurrentFrame.mTcw.rowRange(0,3).colRange(0,3); //3x3
+    const cv::Mat tcw = mCurrentFrame.mTcw.rowRange(0,3).col(3); //3x1
+
+    std::vector<float> vDepth(MPs.size(), -1);
+
+    //    std::cout << "Depth " << " ";
+    for(int iMp = 0; iMp < MPs.size(); iMp++)
+    {
+        MapPoint* pMp = MPs.at(iMp);
+        cv::Mat x3Dw = pMp->GetWorldPos();
+        cv::Mat x3Dc = Rcw*x3Dw+tcw;
+
+        vDepth.at(iMp) = x3Dc.at<float>(2);
+        //        std::cout << x3Dc.at<float>(2) << " ";
+    }
+    //    std::cout << std::endl;
+    if(MPs.size() == 0)
+    {
+        depth = -1;
+        return;
+    }
+    else if(MPs.size() == 1)
+    {
+        depth = vDepth.at(0);
+        return;
+    }
+    else if(MPs.size() < 3)
+    {
+        depth = (vDepth.at(0) + vDepth.at(1))/2.0;
+        return;
+    }
+
+    //convert vector -> Mat
+    cv::Mat mDepth(vDepth.size(), 1, Rcw.type());
+    for(size_t i = 0; i < vDepth.size(); i++)
+    {
+        mDepth.at<float>(i) = vDepth.at(i);
+    }
+    cv::Mat mDepthBlur;
+    cv::medianBlur(mDepth, mDepthBlur, 3);
+//    std::cout << mDepth << std::endl
+//              << mDepthBlur << std::endl;
+//    depth = cv::mean(mDepthBlur);
+    cv::Mat m;
+    cv::meanStdDev(mDepthBlur, m, cv::Mat());
+
+//    std::cout << m << std::endl;
+    depth = m.at<double>(0);
+//    std::vector<float> vDepthSorted;
+
+//    cv::sort(vDepth, vDepthSorted, CV_SORT_ASCENDING);
+
+
+//    if(vDepthSorted.size()%2 == 0)
+//        depth = vDepthSorted.at(vDepthSorted.size()/2);
+//    else
+//    {
+//        depth = (vDepthSorted.at(cvFloor((float)vDepthSorted.size()/2))
+//                 + vDepthSorted.at(cvCeil((float)vDepthSorted.size()/2)))/2;
+//    }
+}
+
+void Tracking::ComputeObjectBoxCorner(std::vector<DetectedObject> &Objects, std::vector<std::vector<cv::Mat> > &CornerPose, std::vector<float> &Depth)
+{
+    float invfx = mCurrentFrame.invfx;
+    float invfy = mCurrentFrame.invfy;
+    float cx = mCurrentFrame.cx;
+    float cy = mCurrentFrame.cy;
+
+    CornerPose.resize(Objects.size());
+
+    for(size_t i = 0; i < Objects.size(); i++)
+    {
+        DetectedObject object =  mCurrentFrame.mvObjects.at(i);
+        std::vector<cv::Point> corners;
+        cv::Rect box = object.bounding_box;
+        cv::Point tl = box.tl();
+        cv::Point tr(tl.x + box.width, tl.y);
+        cv::Point br = box.br();
+        cv::Point bl(br.x-box.width, br.y);
+        corners.push_back(tl);
+        corners.push_back(tr);
+        corners.push_back(br);
+        corners.push_back(bl);
+
+        CornerPose.at(i).resize(4);
+
+        float z = Depth.at(i);
+
+        for(int iC = 0; iC < corners.size(); iC++)
+        {
+            const float u = corners[iC].x;
+            const float v = corners[iC].y;
+            const float x = (u-cx)*z*invfx;
+            const float y = (v-cy)*z*invfy;
+            cv::Mat x3Dc = (cv::Mat_<float>(3,1) << x, y, z);
+            CornerPose.at(i).at(iC) = x3Dc;
+        }
+    }
+}
+
+void Tracking::ProjectLastObjectsInCurrent(const cv::Mat Tcl, std::vector<std::vector<cv::Mat>> &LastObjectsBox, std::vector<DetectedObject> &_LastObjects, std::vector<DetectedObject> &_LastObjectsInCurrent)
+{
+    float fx = mCurrentFrame.fx;
+    float fy = mCurrentFrame.fy;
+    float cx = mCurrentFrame.cx;
+    float cy = mCurrentFrame.cy;
+
+    //    _LastObjectsInCurrent.resize(LastObjectsBox.size());
+
+    //    std::cout << "Project: " << std::endl;
+    //    std::cout << fx << " " << fy << " " << cx << " " << cy << std::endl;
+    //    std::cout << Tcl << std::endl;
+
+    std::vector<DetectedObject> lastIncurrent(LastObjectsBox.size());
+    for(size_t iBox = 0; iBox < LastObjectsBox.size(); iBox++)
+    {
+        std::vector<cv::Mat> FourCorners = LastObjectsBox.at(iBox);
+
+        // corners in current frame
+        std::vector<cv::Point2f> corners(4);
+        for(size_t iCorner = 0; iCorner < FourCorners.size(); iCorner++)
+        {
+            const cv::Mat x3Dl = FourCorners.at(iCorner);
+            cv::Mat x3Dl4  = cv::Mat::ones(4,1, x3Dl.type());
+            x3Dl.copyTo(x3Dl4.rowRange(0,3));
+            cv::Mat x3Dc4 = (Tcl*x3Dl4);
+            const cv::Mat x3Dc = x3Dc4.rowRange(0,3);
+            const float x = x3Dc.at<float>(0);
+            const float y = x3Dc.at<float>(1);
+            const float z = x3Dc.at<float>(2);
+            const float u = fx*x/z + cx;
+            const float v = fy*y/z + cy;
+            cv::Point2f p(u,v);
+            corners.at(iCorner) = p;
+        }
+
+        // find a Rect construct these corners to a DetectedObject
+        cv::Point2f tlf = corners.at(0);
+        cv::Point2f trf = corners.at(1);
+        cv::Point2f brf = corners.at(2);
+        cv::Point2f blf = corners.at(3);
+
+        //        std::cout << "Project four corners: " << tlf << trf << brf << blf << std::endl;
+
+        int xl = cvRound((tlf.x + blf.x)/2.0);
+        int xr = cvRound((trf.x + brf.x)/2.0);
+        int yt = cvRound((tlf.y + trf.y)/2.0);
+        int yb = cvRound((blf.y + brf.y)/2.0);
+
+        int width = xr - xl;
+        int height = yb - yt;
+
+        cv::Rect boxPr(xl,yt, width,height);
+        //        cv::Rect boxlast = _LastObjects.at(iBox).bounding_box;
+        //        std::cout << "project last box" << boxlast << " -> " << boxPr << std::endl;
+        DetectedObject objectPr(_LastObjects.at(iBox).object_class, _LastObjects.at(iBox).prob, boxPr);
+
+        lastIncurrent.at(iBox) = objectPr;
+    }
+
+    // remove some boxes which have leave current frame
+    for(size_t iBox = 0; iBox < lastIncurrent.size(); iBox++)
+    {
+        DetectedObject lastBox = lastIncurrent.at(iBox);
+        cv::Point br = lastBox.bounding_box.br();
+        cv::Point tl = lastBox.bounding_box.tl();
+        cv::Rect viewBox = cv::Rect(cv::Point(0,0), cv::Size(mImGray.cols, mImGray.rows));
+        float areaRate = (float) (lastBox.bounding_box & viewBox).area()/(float)(lastBox.bounding_box.area());
+        if((tl.x < 0 || br.x > 0) && areaRate < 0.5)
+            continue;
+        else
+            _LastObjectsInCurrent.push_back(lastIncurrent.at(iBox));
+    }
+}
+
+void Tracking::updateObjectMapPoints()
+{
+    if(nObjects == 0)
+        return;
+    else
+    {
+        for(size_t iC = 0; iC < mCurrentFrame.mvObjectMPs.size(); iC++)
+        {
+            if(msObjectId.count(mCurrentFrame.mvObjectId.at(iC)))
+            {
+                size_t iObjectInBag = std::distance(msObjectId.begin(),
+                                                    msObjectId.find(mCurrentFrame.mvObjectId.at(iC)));
+                std::set<MapPoint*> sExitingMps(mvvObjectMps.at(iObjectInBag).begin(), mvvObjectMps.at(iObjectInBag).end());
+
+                for(size_t iMPs = 0; iMPs < mCurrentFrame.mvObjectMPs.at(iC).size(); iMPs++)
+                {
+                    if(!sExitingMps.count(mCurrentFrame.mvObjectMPs.at(iC).at(iMPs)))
+                    {
+                        mvvObjectMps.at(iObjectInBag).push_back(mCurrentFrame.mvObjectMPs.at(iC).at(iMPs));
+                    }
+                    else
+                        continue;
+                }
+                mvObjectObserveTimes.at(iObjectInBag) += 1;
+
+            }
+            else
+            {
+                msObjectId.insert(mCurrentFrame.mvObjectId.at(iC));
+                mvvObjectMps.push_back(mCurrentFrame.mvObjectMPs.at(iC));
+                mvObjectObserveTimes.push_back(1);
+                mvObjectPose.push_back(mCurrentFrame.mvObjectPose.at(iC));
+            }
+        }
+    }
+}
 } //namespace ORB_SLAM

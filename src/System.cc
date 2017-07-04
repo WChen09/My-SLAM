@@ -297,14 +297,14 @@ cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
             mbReset = false;
         }
     }
-    //detect object
-    std::cout << endl << " --------" << std::endl;
 
-    std::cout << "New Frame" << std::endl;
-    std::cout << " detecting objects" << std::endl;
+
+    //detect object
     std::vector<DetectedObject> detected;
     yolo->detect(im.clone(), detected);
-    std::cout << " detect done" << std::endl;
+    // remove small object which is overlaped by big box
+    //TODO
+
 
     cv::Mat Tcw = mpTracker->GrabImageMonocular(im, timestamp, detected);
     unique_lock<mutex> lock2(mMutexState);
@@ -560,4 +560,9 @@ const string System::GetMapPath()
     return "Localization";
 
 }
+
+//void System::funeTuneObjects(std::vector<DetectedObject> &objects)
+//{
+
+//}
 } //namespace ORB_SLAM

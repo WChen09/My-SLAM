@@ -57,7 +57,7 @@ void MapDrawer::DrawMapPoints()
 
     for(size_t i=0, iend=vpMPs.size(); i<iend;i++)
     {
-        if(vpMPs[i]->isBad() || spRefMPs.count(vpMPs[i]))
+        if(vpMPs[i]->isBad() || spRefMPs.count(vpMPs[i]) || vpMPs[i]->mnObjectId != -1)
             continue;
         cv::Mat pos = vpMPs[i]->GetWorldPos();
         glVertex3f(pos.at<float>(0),pos.at<float>(1),pos.at<float>(2));
@@ -76,8 +76,64 @@ void MapDrawer::DrawMapPoints()
         glVertex3f(pos.at<float>(0),pos.at<float>(1),pos.at<float>(2));
 
     }
+    glEnd();
+
+
+
+    for(size_t i=0, iend=vpMPs.size(); i<iend;i++)
+    {
+        if(vpMPs[i]->isBad() || spRefMPs.count(vpMPs[i]))
+            continue;
+        if(vpMPs[i]->mnObjectId == -1)
+            continue;
+
+        glPointSize(mPointSize);
+        glBegin(GL_POINTS);
+        if(vpMPs[i]->mnObjectId % 2 == 1)
+            glColor3f(0.0,1.0,0.0);
+        else
+            glColor3f(0.0,0.5,0.5);
+        cv::Mat pos = vpMPs[i]->GetWorldPos();
+        glVertex3f(pos.at<float>(0),pos.at<float>(1),pos.at<float>(2));
+        glEnd();
+    }
+
+
+//    int nObjects = mpMap->GetALLObjectMPs();
+
+//    for(int iObject = 0; iObject < nObjects; iObject++)
+//    {
+//        std::vector<MapPoint*> o;
+//        for(size_t i=0, iend=vpMPs.size(); i<iend;i++)
+//        {
+//            if(vpMPs[i]->mnObjectId == -1 || vpMPs[i]->isBad())
+//                continue;
+//            if(vpMPs[i]->mnObjectId == iObject)
+//                o.push_back(vpMPs[i]);
+//        }
+//        DrawObjectBox(o);
+//    }
+
+//    const std::vector<std::vector<MapPoint*>> vvObjectMPs = mpMap->GetObjectMapPoints();
+
+//    for(size_t iObject = 0; iObject < vvObjectMPs.size(); iObject++)
+//    {
+//        std::vector<MapPoint*> vObjectMPs = vvObjectMPs.at(iObject);
+//        DrawObjectBox(vObjectMPs);
+//    }
+    const std::vector<cv::Point3f> vObjectPose = mpMap->GetObjectPose();
+    glPointSize(mPointSize*5);
+    glBegin(GL_POINTS);
+    glColor3f(1.0,0.0,0.0);
+    for(int i = 0; i < vObjectPose.size(); i++)
+    {
+        cv::Point3f p = vObjectPose.at(i);
+        glVertex3f(p.x, p.y, p.z);
+        std::cout << p << std::endl;
+    }
 
     glEnd();
+
 }
 
 void MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph)
@@ -185,9 +241,9 @@ void MapDrawer::DrawCurrentCamera(pangolin::OpenGlMatrix &Twc)
     glPushMatrix();
 
 #ifdef HAVE_GLES
-        glMultMatrixf(Twc.m);
+    glMultMatrixf(Twc.m);
 #else
-        glMultMatrixd(Twc.m);
+    glMultMatrixd(Twc.m);
 #endif
 
     glLineWidth(mCameraLineWidth);
@@ -259,6 +315,110 @@ void MapDrawer::GetCurrentOpenGLCameraMatrix(pangolin::OpenGlMatrix &M)
     }
     else
         M.SetIdentity();
+}
+
+std::vector<float> MapDrawer::ComputeRange(std::vector<MapPoint*> & Mps)
+{
+    std::vector<float> xv(Mps.size(), -1);
+    std::vector<float> yv(Mps.size(), -1);
+    std::vector<float> zv(Mps.size(), -1);
+    for(size_t iMp = 0; iMp < Mps.size(); iMp++)
+    {
+        MapPoint* CurrentMp = Mps.at(iMp);
+        cv::Mat pos = CurrentMp->GetWorldPos();
+        xv.at(iMp) = pos.at<float>(0);
+        yv.at(iMp) = pos.at<float>(1);
+        zv.at(iMp) = pos.at<float>(2);
+    }
+    std::vector<float> xvs;
+    std::vector<float> yvs;
+    std::vector<float> zvs;
+    cv::sort(xv, xvs, CV_SORT_ASCENDING);
+    cv::sort(yv, yvs, CV_SORT_ASCENDING);
+    cv::sort(zv, zvs, CV_SORT_ASCENDING);
+
+    float minx = xvs.at(0);
+    float maxx = xvs.at(xvs.size()-1);
+
+    float miny = yvs.at(0);
+    float maxy = yvs.at(yvs.size()-1);
+
+    float minz = zvs.at(0);
+    float maxz = zvs.at(zvs.size()-1);
+
+    std::vector<float> out(6, 0.0);
+
+    out.at(0) = minx;
+    out.at(1) = maxx;
+    out.at(2) = miny;
+    out.at(3) = maxy;
+    out.at(4) = minz;
+    out.at(5) = maxz;
+
+    return out;
+
+}
+
+void MapDrawer::DrawObjectBox(std::vector<MapPoint*>&vObjectMps)
+{
+
+    glLineWidth(mGraphLineWidth);
+    glColor3f(0.0f,0.0f,1.0f);
+    glBegin(GL_LINES);
+
+    if(vObjectMps.size() < 5)
+        return;
+
+    std::vector<float> axRange = ComputeRange(vObjectMps);
+
+    const float minx = axRange.at(0);
+    const float maxx = axRange.at(1);
+    const float miny = axRange.at(2);
+    const float maxy = axRange.at(3);
+    const float minz = axRange.at(4);
+    const float maxz = axRange.at(5);
+
+    // bottom plane
+    glVertex3f(minx, miny, minz);
+    glVertex3f(maxx, miny, minz);
+
+    glVertex3f(maxx, miny, minz);
+    glVertex3f(maxx, maxy, minz);
+
+    glVertex3f(maxx, maxy, minz);
+    glVertex3f(minx, maxy, minz);
+
+    glVertex3f(minx, maxy, minz);
+    glVertex3f(minx, miny, minz);
+
+    // upper plane
+    glVertex3f(minx, miny, maxz);
+    glVertex3f(maxx, miny, maxz);
+
+    glVertex3f(maxx, miny, maxz);
+    glVertex3f(maxx, maxy, maxz);
+
+    glVertex3f(maxx, maxy, maxz);
+    glVertex3f(minx, maxy, maxz);
+
+    glVertex3f(minx, maxy, maxz);
+    glVertex3f(minx, miny, maxz);
+
+    // four lines
+    glVertex3f(minx, miny, minz);
+    glVertex3f(minx, miny, maxz);
+
+    glVertex3f(maxx, miny, minz);
+    glVertex3f(maxx, miny, maxz);
+
+    glVertex3f(maxx, maxy, minz);
+    glVertex3f(maxx, maxy, maxz);
+
+    glVertex3f(minx, maxy, minz);
+    glVertex3f(minx, maxy, maxz);
+
+    glEnd();
+
 }
 
 } //namespace ORB_SLAM

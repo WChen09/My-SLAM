@@ -45,6 +45,9 @@ public:
     void SetReferenceKeyFrame(KeyFrame *pKF);
     void GetCurrentOpenGLCameraMatrix(pangolin::OpenGlMatrix &M);
 
+    void DrawObjectBox(std::vector<MapPoint *> &vObjectMps);
+    std::vector<float> ComputeRange(std::vector<MapPoint *> &Mps);
+
 private:
 
     float mKeyFrameSize;

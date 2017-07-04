@@ -61,7 +61,9 @@ Frame::Frame(const Frame &frame)
      mvScaleFactors(frame.mvScaleFactors), mvInvScaleFactors(frame.mvInvScaleFactors),
      mvLevelSigma2(frame.mvLevelSigma2), mvInvLevelSigma2(frame.mvInvLevelSigma2),
      mvObjects(frame.mvObjects), mvkpsInObject(frame.mvkpsInObject), mvObjectId(frame.mvObjectId),
-     mvdescriptorsInObject(frame.mvdescriptorsInObject)
+     mvdescriptorsInObject(frame.mvdescriptorsInObject), mvMapPointsId(frame.mvMapPointsId),
+     mvvObjectBoxCornerLocationInFrame(frame.mvvObjectBoxCornerLocationInFrame), mvObjectDepth(frame.mvObjectDepth),
+     mvObjectMPs(frame.mvObjectMPs), mvLastObjectProInCurrent(frame.mvLastObjectProInCurrent), mvObjectPose(frame.mvObjectPose)
 {
     for(int i=0;i<FRAME_GRID_COLS;i++)
         for(int j=0; j<FRAME_GRID_ROWS; j++)
@@ -244,6 +246,19 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
     mb = mbf/fx;
 
     AssignFeaturesToGrid();
+
+    mvMapPointsId.resize(mvpMapPoints.size(), -1);
+
+//    mvvObjectBoxCornerLocationInFrame.resize(mvObjects.size());
+
+//    for(size_t i = 0; i < mvvObjectBoxCornerLocationInFrame.size(); i++)
+//    {
+//        mvvObjectBoxCornerLocationInFrame.at(i).resize(4);
+//    }
+
+//    mvObjectDepth.resize(mvObjects.size());
+//    mvObjectMPs.resize(mvObjects.size());
+
 }
 
 void Frame::reOrgnizeFeature()
@@ -253,6 +268,11 @@ void Frame::reOrgnizeFeature()
     std::vector<cv::KeyPoint> kpsIn, kpsInUn;
     std::vector<size_t> Inidx;
     std::vector<size_t> InidxUn;
+    kpsIn.reserve(mvKeys.size());
+    kpsInUn.reserve(mvKeys.size());
+    Inidx.reserve(mvKeys.size());
+    InidxUn.reserve(mvKeys.size());
+
     for(size_t i = 0; i < mvKeys.size(); i++)
     {
         for(size_t j = 0; j < mvObjects.size(); j++)
@@ -291,6 +311,24 @@ void Frame::reOrgnizeFeature()
     {
         mDescriptors.row(InidxUn.at(i)).copyTo(descriptorInUn.row(i));
     }
+
+//    cv::Mat descriptorOut = cv::Mat::zeros((int)(mvKeys.size()-kpsInUn.size()), 0);
+//    size_t j = 0, k = 0;
+//    for(size_t i = 0; i < mvKeys.size(); i++)
+//    {
+//        if(i == InidxUn.at(j))
+//        {
+//            j++;
+//            continue;
+//        }
+//        else
+//        {
+//            mDescriptors.row(i).copyTo(descriptorOut.row(k));
+//            k++;
+//        }
+//    }
+//    descriptorOut.copyTo(mDescriptorsUnlabeled);
+
 
     Nlabeled = (int)kpsInUn.size();
     // divide kps to vector for each object, only using undistorted keyPoints
@@ -475,6 +513,11 @@ vector<size_t> Frame::GetFeaturesInArea(const float &x, const float  &y, const f
             for(size_t j=0, jend=vCell.size(); j<jend; j++)
             {
                 const cv::KeyPoint &kpUn = mvKeysUn[vCell[j]];
+
+//                 not include kp in objects
+//                if(kpUn.class_id != -1)
+//                    continue;
+
                 if(bCheckLevels)
                 {
                     if(kpUn.octave<minLevel)

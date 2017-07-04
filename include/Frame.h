@@ -155,7 +155,12 @@ public:
     std::vector<int> mvObjectId;
     std::vector<std::vector<cv::KeyPoint>> mvkpsInObject;
     std::vector<cv::Mat> mvdescriptorsInObject;
-
+    // for projection, then solve the Object losing problem
+    std::vector<std::vector<cv::Mat>> mvvObjectBoxCornerLocationInFrame;
+    std::vector<float> mvObjectDepth;
+    std::vector<std::vector<MapPoint*>> mvObjectMPs;
+    std::vector<cv::Point3f> mvObjectPose;
+    std::vector<DetectedObject> mvLastObjectProInCurrent;
     // Vector of keypoints (original for visualization) and undistorted (actually used by the system).
     // In the stereo case, mvKeysUn is redundant as images must be rectified.
     // In the RGB-D case, RGB images can be distorted.
@@ -176,6 +181,7 @@ public:
 
     // MapPoints associated to keypoints, NULL pointer if no association.
     std::vector<MapPoint*> mvpMapPoints;
+    std::vector<int> mvMapPointsId;
 
     // Flag to identify outlier associations.
     std::vector<bool> mvbOutlier;
@@ -211,8 +217,6 @@ public:
     static float mnMaxY;
 
     static bool mbInitialComputations;
-
-    std::vector<DetectedObject> frameObjects;
 
 private:
 

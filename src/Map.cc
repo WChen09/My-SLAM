@@ -26,7 +26,7 @@
 namespace ORB_SLAM2
 {
 
-Map::Map():mnMaxKFid(0),mnBigChangeIdx(0)//,mnLabeledMP(0)
+Map::Map():mnMaxKFid(0),mnBigChangeIdx(0), mnObjects(0) //,mnLabeledMP(0)
 {
 }
 
@@ -36,6 +36,41 @@ void Map::AddKeyFrame(KeyFrame *pKF)
     mspKeyFrames.insert(pKF);
     if(pKF->mnId>mnMaxKFid)
         mnMaxKFid=pKF->mnId;
+}
+
+//void Map::SetObjectMapPoints(const int n)
+//{
+//    unique_lock<mutex> lock(mMutexMap);
+//    mnObjects = n;
+//}
+
+
+//int Map::GetALLObjectMPs()
+//{   unique_lock<mutex> lock(mMutexMap);
+//    return  mnObjects;
+//}
+void Map::SetObjectPose(const std::vector<cv::Point3f> &vPose)
+{
+    unique_lock<mutex> lock(mMutexMap);
+    mvObjectPose = vPose;
+}
+
+std::vector<cv::Point3f> Map::GetObjectPose()
+{
+    unique_lock<mutex> lock(mMutexMap);
+    return mvObjectPose;
+}
+
+void Map::SetObjectMapPoints(const std::vector<std::vector<MapPoint *> >& vvMps)
+{
+    unique_lock<mutex> lock(mMutexMap);
+    mvvObjectMapPoints = vvMps;
+}
+
+std::vector<std::vector<MapPoint*>>  Map::GetObjectMapPoints()
+{
+    unique_lock<mutex> lock(mMutexMap);
+    return mvvObjectMapPoints;
 }
 
 void Map::AddMapPoint(MapPoint *pMP)
@@ -136,6 +171,7 @@ void Map::clear()
     mnMaxKFid = 0;
     mvpReferenceMapPoints.clear();
     mvpKeyFrameOrigins.clear();
+    mvvObjectMapPoints.clear();
 //    mnLabeledMP = 0;
 }
 

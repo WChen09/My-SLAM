@@ -65,8 +65,14 @@ protected:
     vector<int> mvIniMatches;
     int mState;
 
-//    vector<DetectedObject> mvCurrentObjects;
+    vector<DetectedObject> mvCurrentObjects;
+    vector<DetectedObject> mvLastInCurrent;
+    vector<int> mvLastObjectId;
+    vector<int> mvObjectsId;
+    vector<int> mvMPsId;
     vector<string> names;
+    vector<cv::KeyPoint> mvCurrentKeysIn;
+    int NIn;
 //    int mnlabeled, mnlabeledVO;
 
     Map* mpMap;

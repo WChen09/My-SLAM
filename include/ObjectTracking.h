@@ -2,6 +2,10 @@
 #include <opencv2/opencv.hpp>
 #include <assert.h>
 
+#include "HungarianAlg.h"
+#include <vector>
+#include "Thirdparty/darknet/src/object.h"
+#include <list>
 /**
  * @brief nms
  * Non maximum suppression
@@ -145,5 +149,49 @@ inline void nms2(
         }
     }
 }
+inline double CalcDistJaccard(cv::Rect &current, cv::Rect &former)
+{
 
+    float intArea = (current & former).area();
+    float unionArea = current.area() + former.area() - intArea;
+
+    return 1 - intArea / unionArea;
+}
+
+inline void HungarianAssignment(std::vector<int>& _assignment,
+                                std::vector<DetectedObject>& LastObjects,
+                                std::vector<DetectedObject>& CurrentObjects,
+                                const float maxDisTh)
+{
+    size_t N = LastObjects.size();
+    size_t M = CurrentObjects.size();
+
+    _assignment.resize(N, -1);
+    std::vector<float> Distance(N*M);
+    int k = 0;
+    for(size_t i = 0; i < _assignment.size(); i++)
+    {
+
+        DetectedObject lastBox = LastObjects.at(i);
+        for(size_t j = 0; j < M; j++)
+        {
+            float dist =  CalcDistJaccard(CurrentObjects.at(j).bounding_box, lastBox.bounding_box);
+            Distance.at(i + j * N) = dist;
+        }
+    }
+    AssignmentProblemSolver APS;
+    APS.Solve(Distance, N, M, _assignment, AssignmentProblemSolver::optimal);
+
+    for (size_t i = 0; i < _assignment.size(); i++)
+    {
+        if (_assignment.at(i) != -1)
+        {
+            if (Distance.at(i + _assignment.at(i) * N) > maxDisTh)
+            {
+                _assignment.at(i) = -1;
+            }
+        }
+    }
+
+}
 

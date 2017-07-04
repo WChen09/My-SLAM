@@ -134,7 +134,10 @@ void Viewer::Run()
         if(menuShowPoints)
             mpMapDrawer->DrawMapPoints();
 
+//        mpMapDrawer->DrawObjectBox();
         pangolin::FinishFrame();
+
+
 
         cv::Mat im = mpFrameDrawer->DrawFrame();
         cv::imshow("ORB-SLAM2: Current Frame",im);

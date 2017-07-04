@@ -95,6 +95,10 @@ int ORBmatcher::SearchByProjection(Frame &F, const vector<MapPoint*> &vpMapPoint
                     continue;
             }
 
+//            //no include kps in objects
+//            if(F.mvKeysUn.at(idx).class_id != -1)
+//                continue;
+
             const cv::Mat &d = F.mDescriptors.row(idx);
 
             const int dist = DescriptorDistance(MPdescriptor,d);
@@ -120,7 +124,7 @@ int ORBmatcher::SearchByProjection(Frame &F, const vector<MapPoint*> &vpMapPoint
             if(bestLevel==bestLevel2 && bestDist>mfNNratio*bestDist2)
                 continue;
 
-            F.mvpMapPoints[bestIdx]=pMP;
+            F.mvpMapPoints[bestIdx]=pMP; // the second place to add Mps for current frame
             nmatches++;
         }
     }
@@ -209,6 +213,10 @@ int ORBmatcher::SearchByBoW(KeyFrame* pKF,Frame &F, vector<MapPoint*> &vpMapPoin
                     if(vpMapPointMatches[realIdxF])
                         continue;
 
+//                    // kps in objects
+//                    if(F.mvKeysUn.at(realIdxF).class_id != -1)
+//                        continue;
+
                     const cv::Mat &dF = F.mDescriptors.row(realIdxF);
 
                     const int dist =  DescriptorDistance(dKF,dF);
@@ -229,7 +237,7 @@ int ORBmatcher::SearchByBoW(KeyFrame* pKF,Frame &F, vector<MapPoint*> &vpMapPoin
                 {
                     if(static_cast<float>(bestDist1)<mfNNratio*static_cast<float>(bestDist2))
                     {
-                        vpMapPointMatches[bestIdxF]=pMP;
+                        vpMapPointMatches[bestIdxF]=pMP; //add MapPoints to current frame
 
                         const cv::KeyPoint &kp = pKF->mvKeysUn[realIdxKF];
 
@@ -1387,7 +1395,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
                 else if(bBackward)
                     vIndices2 = CurrentFrame.GetFeaturesInArea(u,v, radius, 0, nLastOctave);
                 else
-                    vIndices2 = CurrentFrame.GetFeaturesInArea(u,v, radius, nLastOctave-1, nLastOctave+1);
+                    vIndices2 = CurrentFrame.GetFeaturesInArea(u,v, radius, nLastOctave-1, nLastOctave+1);//Mono not include labeled Kps
 
                 if(vIndices2.empty())
                     continue;
@@ -1425,7 +1433,8 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
 
                 if(bestDist<=TH_HIGH)
                 {
-                    CurrentFrame.mvpMapPoints[bestIdx2]=pMP;
+                    CurrentFrame.mvpMapPoints[bestIdx2]=pMP; //the first place to add mapPoints for current frame
+
                     nmatches++;
 
                     if(mbCheckOrientation)
