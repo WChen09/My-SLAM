@@ -1,12 +1,12 @@
 %YAML:1.0
-dataPath: "./darknet_cfg/coco.data"
-netCfgPath: "./darknet_cfg/yolo.cfg"
-weightPath: "./darknet_cfg/yolo.weights"
-nameListPath: "./darknet_cfg/coco.names"
-alphabetPath: "./darknet_cfg/labels/"
-imgPathFile: "./KITTI_slam_cfg/imagePath.txt"
+dataPath: "/home/wchen/ORB_SLAM2/Examples/Monocular/darknet_cfg/coco.data"
+netCfgPath: "/home/wchen/ORB_SLAM2/Examples/Monocular/darknet_cfg/yolo.cfg"
+weightPath: "/home/wchen/ORB_SLAM2/Examples/Monocular/darknet_cfg/yolo.weights"
+nameListPath: "/home/wchen/ORB_SLAM2/Examples/Monocular/darknet_cfg/coco.names"
+alphabetPath: "/home/wchen/ORB_SLAM2/Examples/Monocular/darknet_cfg/labels/"
+imgPathFile: "/home/wchen/ORB_SLAM2/Examples/Monocular/KITTI_slam_cfg/imagePath.txt"
 saveVideo: "./robotcar2015-11-11-14-13-43.avi"
 nClass: 6
-thresh: 0.40
+thresh: 0.55
 hier_thresh: 0.5
 nms: 0.4

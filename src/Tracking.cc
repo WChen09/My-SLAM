@@ -44,7 +44,6 @@
 #include <pcl/filters/statistical_outlier_removal.h>
 #include <pcl/visualization/cloud_viewer.h>
 
-
 using namespace std;
 
 namespace ORB_SLAM2
@@ -1733,8 +1732,8 @@ void Tracking::TrackLastObjects(std::vector<int> &_assignment, const float nMatc
             }
         }
 
-        int nCurrentMps = vMPsLastInCurrent.size();
-        int nLastMps = mLastFrame.mvObjectMPs.at(iLastObject).size();
+        size_t nCurrentMps = vMPsLastInCurrent.size();
+        size_t nLastMps = mLastFrame.mvObjectMPs.at(iLastObject).size();
         int nMatches = 0;
         std::vector<bool> alreadyMatched(nCurrentMps, false);
         for(size_t iL = 0; iL < nLastMps; iL++)
@@ -1801,9 +1800,9 @@ void Tracking::UpdateTrackObject(std::vector<int>& _assignment)
                 if(mCurrentFrame.mvObjects.at(iObject).bounding_box.contains(mCurrentFrame.mvKeysUn.at(iMp).pt))
                 {
 
-                    mCurrentFrame.mvpMapPoints.at(iMp)->setObjectId(mCurrentFrame.mvObjectId.at(iObject));
-                    mCurrentFrame.mvpMapPoints.at(iMp)->setClassId(mCurrentFrame.mvObjects.at(iObject).object_class);
-                    mCurrentFrame.mvMapPointsId.at(iMp) = mCurrentFrame.mvObjectId.at(iObject);
+//                    mCurrentFrame.mvpMapPoints.at(iMp)->setObjectId(mCurrentFrame.mvObjectId.at(iObject));
+//                    mCurrentFrame.mvpMapPoints.at(iMp)->setClassId(mCurrentFrame.mvObjects.at(iObject).object_class);
+//                    mCurrentFrame.mvMapPointsId.at(iMp) = mCurrentFrame.mvObjectId.at(iObject);
 
                     ObjectMPs.at(iObject).push_back(pMP);
                     //                        std::cout << mCurrentFrame.mvMapPointsId.at(iMp) << " ";
@@ -1812,22 +1811,50 @@ void Tracking::UpdateTrackObject(std::vector<int>& _assignment)
         }
     }
 
-    // remove the background MPs
+    // --- remove the background MPs and compute the center of the object
     std::vector<cv::Point3f> ObjectsPose(ObjectMPs.size());
+    std::vector<std::vector<MapPoint*>> ObjectMPsFilter(mCurrentFrame.mvObjects.size());
     for(size_t i = 0; i < ObjectMPs.size(); i++)
     {
         std::vector<MapPoint*> iObjectMPs = ObjectMPs.at(i);
-        ObjectsPose.at(i) = ComputeObjectPose(iObjectMPs);
+
+        // PCL filter remove
+        std::vector<MapPoint*> iObjectMPs_filter;
+        PCLStatisticalFilter(iObjectMPs, iObjectMPs_filter);
+        ObjectsPose.at(i) = ComputeObjectPose(iObjectMPs_filter);
+
+        for(size_t iMp = 0; iMp < iObjectMPs_filter.size(); iMp++)
+        {
+            iObjectMPs_filter.at(iMp)->setObjectId(i);
+            iObjectMPs_filter.at(iMp)->setClassId(mCurrentFrame.mvObjects.at(i).object_class);
+        }
+        ObjectMPsFilter.at(i) = iObjectMPs_filter;
+    }
+
+    for(size_t iMp = 0; iMp < mCurrentFrame.mvpMapPoints.size(); iMp++)
+    {
+    	MapPoint* pMp = mCurrentFrame.mvpMapPoints.at(iMp);
+    	if(pMp)
+    	{
+        	if(pMp->mnObjectId == -1)
+        		continue;
+        	else
+        	{
+        		mCurrentFrame.mvMapPointsId.at(iMp) = pMp->mnObjectId;
+        	}
+    	}
+
     }
 
     // depth
-    std::vector<float> ObjectDepth(ObjectMPs.size(), 0);
-    for(size_t iObject = 0; iObject < ObjectMPs.size(); iObject++)
+    // depth
+    std::vector<float> ObjectDepth(ObjectMPsFilter.size(), 0);
+    for(size_t iObject = 0; iObject < ObjectMPsFilter.size(); iObject++)
     {
         float Depth = 0;
-        ComputeObjectDepth(ObjectMPs.at(iObject), Depth); //need var limination
+        ComputeObjectDepth(ObjectMPsFilter.at(iObject), Depth); //add medianBlur
         ObjectDepth.at(iObject) = Depth;
-        std::cout << Depth << " ";
+//        std::cout << Depth << " ";
     }
 
     std::vector<std::vector<cv::Mat>> ObjectBoxCornerLocation;
@@ -1835,7 +1862,7 @@ void Tracking::UpdateTrackObject(std::vector<int>& _assignment)
 
     mCurrentFrame.mvvObjectBoxCornerLocationInFrame = ObjectBoxCornerLocation;
     mCurrentFrame.mvObjectDepth = ObjectDepth;
-    mCurrentFrame.mvObjectMPs = ObjectMPs;
+    mCurrentFrame.mvObjectMPs = ObjectMPsFilter;
     mCurrentFrame.mvObjectPose = ObjectsPose;
 
     //std::cout << std::endl;
@@ -1858,7 +1885,6 @@ void Tracking::FirstTrack()
 
     //add object id to Mps
     std::vector<std::vector<MapPoint*>> ObjectMPs(mCurrentFrame.mvObjects.size());
-
     for(size_t iMp = 0; iMp < mCurrentFrame.mvpMapPoints.size(); iMp++)
     {
         MapPoint* pMP = mCurrentFrame.mvpMapPoints.at(iMp);
@@ -1879,30 +1905,48 @@ void Tracking::FirstTrack()
     }
     //    std::cout << std::endl;
 
-    // --- remove the background MPs
-    // 1. compute the center of objects
+    // --- remove the background MPs and compute the center of the object
     std::vector<cv::Point3f> ObjectsPose(ObjectMPs.size());
+    std::vector<std::vector<MapPoint*>> ObjectMPsFilter(mCurrentFrame.mvObjects.size());
     for(size_t i = 0; i < ObjectMPs.size(); i++)
     {
         std::vector<MapPoint*> iObjectMPs = ObjectMPs.at(i);
-        ObjectsPose.at(i) = ComputeObjectPose(iObjectMPs);
 
+        // PCL filter remove
         std::vector<MapPoint*> iObjectMPs_filter;
         PCLStatisticalFilter(iObjectMPs, iObjectMPs_filter);
+        ObjectsPose.at(i) = ComputeObjectPose(iObjectMPs_filter);
+
+        for(size_t iMp = 0; iMp < iObjectMPs_filter.size(); iMp++)
+        {
+            iObjectMPs_filter.at(iMp)->setObjectId(i);
+            iObjectMPs_filter.at(iMp)->setClassId(mCurrentFrame.mvObjects.at(i).object_class);
+        }
+        ObjectMPsFilter.at(i) = iObjectMPs_filter;
     }
-    // 2. PCL remove
 
-
+    for(size_t iMp = 0; iMp < mCurrentFrame.mvpMapPoints.size(); iMp++)
+    {
+    	MapPoint* pMp = mCurrentFrame.mvpMapPoints.at(iMp);
+    	if(pMp)
+    	{
+        	if(pMp->mnObjectId == -1)
+        		continue;
+        	else
+        	{
+        		mCurrentFrame.mvMapPointsId.at(iMp) = pMp->mnObjectId;
+        	}
+    	}
+    }
 
     // depth
-    std::vector<float> ObjectDepth(ObjectMPs.size(), 0);
-    for(size_t iObject = 0; iObject < ObjectMPs.size(); iObject++)
+    std::vector<float> ObjectDepth(ObjectMPsFilter.size(), 0);
+    for(size_t iObject = 0; iObject < ObjectMPsFilter.size(); iObject++)
     {
         float Depth = 0;
-        ComputeObjectDepth(ObjectMPs.at(iObject), Depth); //add medianBlur
+        ComputeObjectDepth(ObjectMPsFilter.at(iObject), Depth); //add medianBlur
         ObjectDepth.at(iObject) = Depth;
-        std::cout << Depth << " ";
-
+//        std::cout << Depth << " ";
     }
 
     std::vector<std::vector<cv::Mat>> ObjectBoxCornerLocation;
@@ -1921,7 +1965,7 @@ void Tracking::FirstTrack()
 
     mCurrentFrame.mvvObjectBoxCornerLocationInFrame = ObjectBoxCornerLocation;
     mCurrentFrame.mvObjectDepth = ObjectDepth;
-    mCurrentFrame.mvObjectMPs = ObjectMPs;
+    mCurrentFrame.mvObjectMPs = ObjectMPsFilter;
     mCurrentFrame.mvObjectPose = ObjectsPose;
 
 }
@@ -1931,36 +1975,55 @@ void Tracking::PCLStatisticalFilter(std::vector<MapPoint *> &InMps, std::vector<
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
     cloud->width = (int)InMps.size();
     cloud->height = 1;
-    
+
     for(size_t iMp = 0; iMp < InMps.size(); iMp++)
     {
         MapPoint* mp = InMps.at(iMp);
         cv::Mat x3Dw = mp->GetWorldPos();
         cloud->points.push_back(pcl::PointXYZ(x3Dw.at<float>(0),x3Dw.at<float>(1),x3Dw.at<float>(2)));
-//        cloud->points.at(iMp).x = x3Dw.at<float>(0);
-//        cloud->points.at(iMp).y = x3Dw.at<float>(1);
-//        cloud->points.at(iMp).z = x3Dw.at<float>(2);
     }
-
-//    std::cout << *cloud << std::endl;
     pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
-    sor.setInputCloud (cloud);
+    sor.setInputCloud(cloud);
     sor.setMeanK(5);
     sor.setStddevMulThresh(1.0);
     pcl::PointCloud<pcl::PointXYZ> cloudOut;
     sor.setNegative (true);
     sor.filter(cloudOut);
-//    std::cout << cloudOut << std::endl;
-    std::vector<pcl::PointXYZ> outliers = cloudOut.points;
-    std::vector<bool> judged(outliers.size(), false);
-    std::vector<pcl::PointXYZ> in = cloud->points;
-    for(size_t i = 0; i < in.size(); i++)
+
+    std::vector<float> checked(cloudOut.size(), false);
+    std::set<size_t> Outliers;
+    for(size_t i = 0; i < cloud->size(); i++)
     {
-        pcl::PointXYZ inP = in.at(i);
-        for(size_t j = 0; j < outliers; j++)
+        float xin = cloud->points.at(i).x;
+        float yin = cloud->points.at(i).y;
+        float zin = cloud->points.at(i).z;
+
+        for(size_t j = 0; j < cloudOut.size(); j++)
         {
-//              if(inP. ==)
+            if(checked.at(j))
+                continue;
+
+            float xOut = cloudOut.points.at(j).x;
+            float yOut = cloudOut.points.at(j).y;
+            float zOut = cloudOut.points.at(j).z;
+
+            float d = sqrt(pow((xOut-xin), 2) + pow((yOut - yin), 2) + pow((zOut - zin), 2));
+
+            if(d < 1e-8)
+            {
+                checked.at(j) = true;
+                Outliers.insert(i);
+                break;
+            }
         }
+    }
+    OutMps.reserve(InMps.size());
+    for(size_t iMp = 0; iMp < InMps.size(); iMp++)
+    {
+        if(Outliers.count(iMp))
+            continue;
+        MapPoint* mp = InMps.at(iMp);
+        OutMps.push_back(mp);
     }
 
 }
@@ -1976,7 +2039,7 @@ cv::Point3f Tracking::ComputeObjectPose(std::vector<MapPoint *> &MPs)
     std::vector<float> y(MPs.size(), 0);
     std::vector<float> z(MPs.size(), 0);
 
-    for(int iMp = 0; iMp < MPs.size(); iMp++)
+    for(size_t iMp = 0; iMp < MPs.size(); iMp++)
     {
         MapPoint* pMp = MPs.at(iMp);
         cv::Mat x3Dw = pMp->GetWorldPos();
@@ -2043,7 +2106,7 @@ void Tracking::ComputeObjectDepth(const std::vector<MapPoint *> MPs, float & dep
     std::vector<float> vDepth(MPs.size(), -1);
 
     //    std::cout << "Depth " << " ";
-    for(int iMp = 0; iMp < MPs.size(); iMp++)
+    for(size_t iMp = 0; iMp < MPs.size(); iMp++)
     {
         MapPoint* pMp = MPs.at(iMp);
         cv::Mat x3Dw = pMp->GetWorldPos();
@@ -2126,7 +2189,7 @@ void Tracking::ComputeObjectBoxCorner(std::vector<DetectedObject> &Objects, std:
 
         float z = Depth.at(i);
 
-        for(int iC = 0; iC < corners.size(); iC++)
+        for(size_t iC = 0; iC < corners.size(); iC++)
         {
             const float u = corners[iC].x;
             const float v = corners[iC].y;

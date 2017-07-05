@@ -92,7 +92,7 @@ void MapDrawer::DrawMapPoints()
         if(vpMPs[i]->mnObjectId % 2 == 1)
             glColor3f(0.0,1.0,0.0);
         else
-            glColor3f(0.0,0.5,0.5);
+            glColor3f(0.0,1.0,1.0);
         cv::Mat pos = vpMPs[i]->GetWorldPos();
         glVertex3f(pos.at<float>(0),pos.at<float>(1),pos.at<float>(2));
         glEnd();

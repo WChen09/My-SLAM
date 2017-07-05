@@ -110,10 +110,10 @@ int main(int argc, char **argv)
         timeRecordfile << ttrack << endl;
         // Wait to load the next frame
         double T=0;
-        if(ni<nImages-1)
-            T = vTimestamps[ni+1]-tframe;
-        else if(ni>0)
-            T = tframe-vTimestamps[ni-1];
+//        if(ni<nImages-1)
+//            T = vTimestamps[ni+1]-tframe;
+//        else if(ni>0)
+//            T = tframe-vTimestamps[ni-1];
 
         if(ttrack<T)
             usleep((T-ttrack)*1e6);
