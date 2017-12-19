@@ -215,7 +215,7 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
 
     mvObjectId.resize(mvObjects.size(), -1);
 
-    reOrgnizeFeature();
+//    reOrgnizeFeature();
 
     N = mvKeysUn.size();
     // Set no stereo information
@@ -377,6 +377,28 @@ void Frame::reOrgnizeFeature()
             nidescriptor++;
         }
         mvdescriptorsInObject.at(iObject) = objectDescriptor;
+    }
+
+    //assign mvObjectMPs with mvObjectMPsKPs
+    mvObjectMPsKps.resize(mvObjectMPs.size());
+    for(size_t i = 0; i < mvObjectMPs.size(); i++)
+    {
+        std::vector<MapPoint*> vMPs = mvObjectMPs.at(i);
+        mvObjectMPsKps.at(i).resize(vMPs.size());
+
+        for(size_t k = 0; k < vMPs.size(); k++)
+        {
+            for(size_t j = 0; j < mvpMapPoints.size(); j++)
+            {
+                MapPoint* pMp = mvpMapPoints.at(j);
+                if(pMp)
+                {
+                    if(pMp == vMPs.at(k))
+                        mvObjectMPsKps.at(i).at(k) = mvKeysUn.at(j);
+                }
+            }
+        }
+
     }
 
 }

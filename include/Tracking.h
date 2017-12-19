@@ -124,6 +124,8 @@ public:
     int nObjects;
     float nMPsMatchedTh;
     Frame mLastFrame;
+
+    std::vector<std::pair<cv::KeyPoint, cv::KeyPoint>> mvObjectMatchKps;
 protected:
 
     // Main tracking function. It is independent of the input sensor.
@@ -153,6 +155,13 @@ protected:
     bool NeedNewKeyFrame();
     void CreateNewKeyFrame();
 
+    // for moving judging
+    void CheckObjectMoving(std::vector<int>& _assignment);
+    void CheckObjectMovingByCameraPose();
+
+    cv::Mat ComputeF12(Frame& F1, Frame& F2);
+    cv::Mat SkewSymmetricMatrix(const cv::Mat &v);
+
     void ProjectLastObjectsInCurrent(const cv::Mat Tcl, std::vector<std::vector<cv::Mat> > &LastObjectsBox, std::vector<DetectedObject> &_LastObjects, std::vector<DetectedObject> &_LastObjectsInCurrent);
     void TrackLastObjects(std::vector<int>& _assignment, const float nMatchesRatio, std::vector<DetectedObject> &lastObjectProInCurrent);
     void UpdateTrackObject(std::vector<int> &_assignment);
@@ -161,11 +170,11 @@ protected:
     void ComputeObjectDepth(const std::vector<MapPoint*> MPs, float &depth);
     void ComputeObjectBoxCorner(std::vector<DetectedObject>& Objects, std::vector<std::vector<cv::Mat>>& CornerPose, std::vector<float>& Depth);
     void updateObjectMapPoints();
-    cv::Point3f ComputeObjectPose(std::vector<MapPoint *> &MPs);
-    float meadianBlurMean(std::vector<float>& P);
+    cv::Point3f ComputeObjectPose(std::vector<MapPoint *> &MPs, cv::Point3f &PoseStd);
+    float meadianBlurMeanStd(std::vector<float>& P, float &std);
 
-    void PCLStatisticalFilter(std::vector<MapPoint*> &InMps, std::vector<MapPoint*> &OutMps);
-
+    void PCLStatisticalFilter(std::vector<MapPoint*> &InMps, std::vector<MapPoint*> &OutMps, const int& nNeighbors, const double& stdDevMult);
+    std::vector<float> ComputeRange(std::vector<MapPoint*> & Mps);
     // In case of performing only localization, this flag is true when there are no matches to
     // points in the map. Still tracking will continue if there are enough matches with temporal points.
     // In that case we are doing visual odometry. The system will try to do relocalization to recover
@@ -241,8 +250,12 @@ protected:
     std::vector<std::vector<MapPoint*>> mvvObjectMps;
     std::vector<cv::Point3f> mvObjectPose;
     std::set<int> msObjectId;
-    std::vector<bool> mvObjectMoving;
     std::vector<int> mvObjectObserveTimes;
+    std::vector<bool> mvObjectStatus;
+    std::vector<bool> mvObjectMoving;
+    std::vector<bool> mvObjectIsBad;
+
+
 
 };
 

@@ -48,6 +48,7 @@ cv::Mat FrameDrawer::DrawFrame()
     std::vector<int> MPsObjectId;
     std::vector<DetectedObject> lastObjects;
     std::vector<int> lastObjectId;
+    std::vector<std::pair<cv::KeyPoint, cv::KeyPoint>> ObjectMatchKps;
 
     //Copy variables within scoped mutex
     {
@@ -63,6 +64,7 @@ cv::Mat FrameDrawer::DrawFrame()
         MPsObjectId = mvMPsId;
         lastObjects = mvLastInCurrent;
         lastObjectId = mvLastObjectId;
+        ObjectMatchKps = mvObjectMatchKps;
 
         if(mState==Tracking::NOT_INITIALIZED)
         {
@@ -123,15 +125,15 @@ cv::Mat FrameDrawer::DrawFrame()
                         cv::rectangle(im,pt1,pt2,cv::Scalar(255,0,255));//magenta color
                         cv::circle(im,vCurrentKeys[i].pt,2,cv::Scalar(255,0,255),-1);
                         mnTracked++;
-//                        mnlabeled++;
+////                        mnlabeled++;
 
                     }
                     else
-                    {
+//                    {
                         cv::rectangle(im,pt1,pt2,cv::Scalar(0,255,0));
                         cv::circle(im,vCurrentKeys[i].pt,2,cv::Scalar(0,255,0),-1);
                         mnTracked++;
-                    }
+//                    }
 
                 }
                 else // This is match to a "visual odometry" MapPoint created in the last frame
@@ -159,12 +161,12 @@ cv::Mat FrameDrawer::DrawFrame()
             DetectedObject& o = objects[i];
             cv::rectangle(im, o.bounding_box, cv::Scalar(255,0,255), 2);
 
-            string class_name = names[o.object_class];
+//            string class_name = names[o.object_class];
 
-            char str[255];
-            //sprintf(str,"%s %f", names[o.object_class], o.prob);
-            sprintf(str,"%d", objectsId.at(i));
-            cv::putText(im, str, cv::Point2f(o.bounding_box.x,o.bounding_box.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,0,255), 1);
+//            char str[255];
+//            //sprintf(str,"%s %f", names[o.object_class], o.prob);
+//            sprintf(str,"%d", objectsId.at(i));
+//            cv::putText(im, str, cv::Point2f(o.bounding_box.x,o.bounding_box.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,0,255), 1);
         }
 
         for(size_t i = 0; i < lastObjects.size(); i++)
@@ -178,6 +180,12 @@ cv::Mat FrameDrawer::DrawFrame()
             //sprintf(str,"%s %f", names[o.object_class], o.prob);
             sprintf(str,"%d", lastObjectId.at(i));
             cv::putText(im, str, cv::Point2f(o.bounding_box.x,o.bounding_box.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255,0,255), 1);
+        }
+
+
+        for(size_t ipair = 0; ipair < ObjectMatchKps.size(); ipair++)
+        {
+            cv::line(im,ObjectMatchKps.at(ipair).first.pt, ObjectMatchKps.at(ipair).second.pt, cv::Scalar(0,255,0));
         }
     }
 
@@ -243,6 +251,8 @@ void FrameDrawer::Update(Tracking *pTracker)
     mvMPsId = pTracker->mCurrentFrame.mvMapPointsId;
     mvLastInCurrent = pTracker->mLastFrame.mvLastObjectProInCurrent;
     mvLastObjectId = pTracker->mLastFrame.mvObjectId;
+
+    mvObjectMatchKps = pTracker->mvObjectMatchKps;
 
     if(pTracker->mLastProcessedState==Tracking::NOT_INITIALIZED)
     {

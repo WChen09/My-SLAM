@@ -39,13 +39,14 @@ public:
     Map* mpMap;
 
     void DrawMapPoints();
+    void DrawObjectMapPoints();
     void DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph);
     void DrawCurrentCamera(pangolin::OpenGlMatrix &Twc);
     void SetCurrentCameraPose(const cv::Mat &Tcw);
     void SetReferenceKeyFrame(KeyFrame *pKF);
     void GetCurrentOpenGLCameraMatrix(pangolin::OpenGlMatrix &M);
 
-    void DrawObjectBox(std::vector<MapPoint *> &vObjectMps);
+    void DrawObjectBox();
     std::vector<float> ComputeRange(std::vector<MapPoint *> &Mps);
 
 private:

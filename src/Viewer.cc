@@ -133,8 +133,8 @@ void Viewer::Run()
             mpMapDrawer->DrawKeyFrames(menuShowKeyFrames,menuShowGraph);
         if(menuShowPoints)
             mpMapDrawer->DrawMapPoints();
-
-//        mpMapDrawer->DrawObjectBox();
+        mpMapDrawer->DrawObjectMapPoints();
+        mpMapDrawer->DrawObjectBox();
         pangolin::FinishFrame();
 
 

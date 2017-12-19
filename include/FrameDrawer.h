@@ -73,6 +73,7 @@ protected:
     vector<string> names;
     vector<cv::KeyPoint> mvCurrentKeysIn;
     int NIn;
+    std::vector<std::pair<cv::KeyPoint, cv::KeyPoint>> mvObjectMatchKps;
 //    int mnlabeled, mnlabeledVO;
 
     Map* mpMap;

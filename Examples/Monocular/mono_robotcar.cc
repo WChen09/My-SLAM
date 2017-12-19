@@ -37,11 +37,14 @@
 #include <fstream>
 #include <vector>
 
+#include "Converter.h"
+
 using namespace std;
 using namespace cv;
 
 void LoadImages_robotcar(const string &strSequence, vector<string> &vstrImageFilenames,
                 vector<double> &vTimestamps);
+void GetGTFile(vector<double> &vTimestamps);
 
 int main(int argc, char **argv)
 {
@@ -54,6 +57,7 @@ int main(int argc, char **argv)
     vector<string> vstrImageFilenames;
     vector<double> vTimestamps;
     LoadImages_robotcar(string(argv[4]), vstrImageFilenames, vTimestamps);
+//    GetGTFile(vTimestamps);
     int nImages = vstrImageFilenames.size();
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
@@ -143,7 +147,7 @@ int main(int argc, char **argv)
     cout << "mean tracking time: " << totaltime/nImages << endl;
 
     // Save camera trajectory
-    SLAM.SaveTrajectoryKITTI("KeyFrameTrajectory.txt");
+    SLAM.SaveTrajectoryKITTI("YOLOTrajectory05Mono.txt");
     return 0;
 }
 
@@ -190,4 +194,49 @@ void LoadImages_robotcar(const string &strPathToSequence, vector<string> &vstrIm
     }
     fTimes.close();
     pathFile.close();
+}
+
+void GetGTFile(vector<double> &vTimestamps)
+{
+    ifstream fGTIn;
+    string strSequence = "/home/wchen/evaluate_ate_scale-master/data_odometry_poses/dataset/poses/";
+    string strPathGTFile =  strSequence + "05.txt";
+     string strPathGTOFile = strSequence + "05_.txt";
+
+    ofstream f;
+    f.open(strPathGTOFile.c_str());
+    f << fixed;
+
+    fGTIn.open(strPathGTFile.c_str());
+
+    if(!fGTIn.is_open()){
+//        cerr << "Cannot open " << strPathTimeFile << endl;
+        exit(0);
+    }
+
+    int i = 0;
+    while(!fGTIn.eof())
+    {
+        string s;
+        getline(fGTIn,s);
+        cv::Mat R = cv::Mat::ones(3, 3, CV_32F);
+        cv::Mat t = cv::Mat::ones(1, 3, CV_32F);
+        if(!s.empty())
+        {
+            stringstream ss;
+            ss << s;
+            ss >> R.at<float>(0,0) >> R.at<float>(0,1) >> R.at<float>(0,2) >> t.at<float>(0)
+                                   >> R.at<float>(1,0) >> R.at<float>(1,1) >> R.at<float>(1,2) >> t.at<float>(1)
+                                   >> R.at<float>(2,0) >> R.at<float>(2,1) >> R.at<float>(2,2) >> t.at<float>(2);
+
+            std::cout << R << t << std::endl;
+
+            vector<float> q = ORB_SLAM2::Converter::toQuaternion(R);
+
+            f << setprecision(6) << vTimestamps.at(i) << setprecision(7) << " " << t.at<float>(0) << " " << t.at<float>(1) << " " << t.at<float>(2)
+              << " " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] << endl;
+
+        }
+        i++;
+    }
 }

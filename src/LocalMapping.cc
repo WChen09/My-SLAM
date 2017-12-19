@@ -189,7 +189,7 @@ void LocalMapping::MapPointCulling()
         {
             lit = mlpRecentAddedMapPoints.erase(lit);
         }
-//        else if(pMP->mnObjectClass != -1)
+//        else if(pMP->mnObjectId != -1)
 //        {
 //            pMP->SetBadFlag();
 //            lit = mlpRecentAddedMapPoints.erase(lit);

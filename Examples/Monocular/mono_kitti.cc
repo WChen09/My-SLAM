@@ -36,6 +36,7 @@ void LoadImages(const string &strSequence, vector<string> &vstrImageFilenames,
 
 int main(int argc, char **argv)
 {
+	std::cout << "in" << std::endl;
     if(argc != 4)
     {
         cerr << endl << "Usage: ./mono_kitti path_to_vocabulary path_to_settings path_to_sequence" << endl;

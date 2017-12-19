@@ -82,6 +82,9 @@ public:
     // Project MapPoints into KeyFrame using a given Sim3 and search for duplicated MapPoints.
     int Fuse(KeyFrame* pKF, cv::Mat Scw, const std::vector<MapPoint*> &vpPoints, float th, vector<MapPoint *> &vpReplacePoint);
 
+    int SearchForObjectMoving(Frame& LastF ,Frame& CurrentF, std::vector<cv::KeyPoint>& LastKps, cv::Mat& LastDes,
+                std::vector<cv::KeyPoint>& CurrentKps, cv::Mat& CurrentDes, cv::Mat& F12, vector<pair<size_t, size_t> > &vMatchedPairs);
+
 public:
 
     static const int TH_LOW;
@@ -92,6 +95,7 @@ public:
 protected:
 
     bool CheckDistEpipolarLine(const cv::KeyPoint &kp1, const cv::KeyPoint &kp2, const cv::Mat &F12, const KeyFrame *pKF);
+    bool CheckDistEpipolarLine(const cv::KeyPoint &kp1,const cv::KeyPoint &kp2,const cv::Mat &F12,const Frame& F2);
 
     float RadiusByViewingCos(const float &viewCos);
 

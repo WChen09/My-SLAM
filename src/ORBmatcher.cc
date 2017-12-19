@@ -57,6 +57,9 @@ int ORBmatcher::SearchByProjection(Frame &F, const vector<MapPoint*> &vpMapPoint
         if(pMP->isBad())
             continue;
 
+//        if(pMP->mnObjectId > -1)
+//            continue;
+
         const int &nPredictedLevel = pMP->mnTrackScaleLevel;
 
         // The size of the window will depend on the viewing direction
@@ -158,6 +161,25 @@ bool ORBmatcher::CheckDistEpipolarLine(const cv::KeyPoint &kp1,const cv::KeyPoin
     const float dsqr = num*num/den;
 
     return dsqr<3.84*pKF2->mvLevelSigma2[kp2.octave];
+}
+
+bool ORBmatcher::CheckDistEpipolarLine(const cv::KeyPoint &kp1,const cv::KeyPoint &kp2,const cv::Mat &F12,const Frame& F2)
+{
+    // Epipolar line in second image l = x1'F12 = [a b c]
+    const float a = kp1.pt.x*F12.at<float>(0,0)+kp1.pt.y*F12.at<float>(1,0)+F12.at<float>(2,0);
+    const float b = kp1.pt.x*F12.at<float>(0,1)+kp1.pt.y*F12.at<float>(1,1)+F12.at<float>(2,1);
+    const float c = kp1.pt.x*F12.at<float>(0,2)+kp1.pt.y*F12.at<float>(1,2)+F12.at<float>(2,2);
+
+    const float num = a*kp2.pt.x+b*kp2.pt.y+c;
+
+    const float den = a*a+b*b;
+
+    if(den==0)
+        return false;
+
+    const float dsqr = num*num/den;
+
+    return dsqr<3.84*F2.mvLevelSigma2[kp2.octave];
 }
 
 int ORBmatcher::SearchByBoW(KeyFrame* pKF,Frame &F, vector<MapPoint*> &vpMapPointMatches)
@@ -1362,6 +1384,8 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
 
         if(pMP)
         {
+//            if(pMP->mnObjectId > -1)
+//                continue;
             if(!LastFrame.mvbOutlier[i])
             {
                 // Project
@@ -1395,7 +1419,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
                 else if(bBackward)
                     vIndices2 = CurrentFrame.GetFeaturesInArea(u,v, radius, 0, nLastOctave);
                 else
-                    vIndices2 = CurrentFrame.GetFeaturesInArea(u,v, radius, nLastOctave-1, nLastOctave+1);//Mono not include labeled Kps
+                    vIndices2 = CurrentFrame.GetFeaturesInArea(u,v, radius, nLastOctave-1, nLastOctave+1);
 
                 if(vIndices2.empty())
                     continue;
@@ -1669,6 +1693,121 @@ int ORBmatcher::DescriptorDistance(const cv::Mat &a, const cv::Mat &b)
     }
 
     return dist;
+}
+
+int ORBmatcher::SearchForObjectMoving(Frame& LastF ,Frame& CurrentF, std::vector<cv::KeyPoint>& LastKps, cv::Mat& LastDes,
+		std::vector<cv::KeyPoint>& CurrentKps, cv::Mat& CurrentDes, cv::Mat& F12, vector<pair<size_t, size_t> > &vMatchedPairs)
+{
+    //Compute epipole in second image
+	LastF.UpdatePoseMatrices();
+    const cv::Mat R2w = CurrentF.mTcw.rowRange(0,3).colRange(0,3); //3x3
+    const cv::Mat t2w = CurrentF.mTcw.rowRange(0,3).col(3); //3x1
+    cv::Mat Cw = LastF.GetCameraCenter();
+    cv::Mat C2 = R2w*Cw+t2w;
+    const float invz = 1.0f/C2.at<float>(2);
+
+    const float ex =CurrentF.fx*C2.at<float>(0)*invz+CurrentF.cx;
+    const float ey =CurrentF.fy*C2.at<float>(1)*invz+CurrentF.cy;
+
+    int nmatches=0;
+    vector<bool> vbMatched2(CurrentKps.size(),false);
+    vector<int> vMatches12(LastKps.size(),-1);
+
+    vector<int> rotHist[HISTO_LENGTH];
+    for(int i=0;i<HISTO_LENGTH;i++)
+        rotHist[i].reserve(500);
+
+    const float factor = 1.0f/HISTO_LENGTH;
+
+    for(size_t idx1=0; idx1 < LastKps.size(); idx1++)
+    {
+    	const cv::KeyPoint &kp1 = LastKps.at(idx1);
+    	const cv::Mat &d1 = LastDes.row(idx1);
+
+    	int bestDist = TH_LOW;
+    	int bestIdx2 = -1;
+
+    	for(size_t idx2=0; idx2<CurrentKps.size(); idx2++)
+    	{
+    		if(vbMatched2[idx2])
+    			continue;
+    		const cv::Mat &d2 = CurrentDes.row(idx2);
+
+    		const int dist = DescriptorDistance(d1,d2);
+
+    		if(dist>TH_LOW || dist>bestDist)
+    			continue;
+
+    		const cv::KeyPoint &kp2 = CurrentKps.at(idx2);
+
+            const float distex = ex-kp2.pt.x;
+            const float distey = ey-kp2.pt.y;
+            if(distex*distex+distey*distey<100*CurrentF.mvScaleFactors[kp2.octave])
+                continue;
+
+            if(CheckDistEpipolarLine(kp1,kp2,F12,CurrentF))
+            {
+                bestIdx2 = idx2;
+                bestDist = dist;
+            }
+
+    	}
+
+        if(bestIdx2>=0)
+        {
+            const cv::KeyPoint &kp2 = CurrentKps.at(bestIdx2);
+            vMatches12[idx1]=bestIdx2;
+            nmatches++;
+
+            if(mbCheckOrientation)
+            {
+                float rot = kp1.angle-kp2.angle;
+                if(rot<0.0)
+                    rot+=360.0f;
+                int bin = round(rot*factor);
+                if(bin==HISTO_LENGTH)
+                    bin=0;
+                assert(bin>=0 && bin<HISTO_LENGTH);
+                rotHist[bin].push_back(idx1);
+            }
+        }
+
+    }
+
+
+    if(mbCheckOrientation)
+    {
+        int ind1=-1;
+        int ind2=-1;
+        int ind3=-1;
+
+        ComputeThreeMaxima(rotHist,HISTO_LENGTH,ind1,ind2,ind3);
+
+        for(int i=0; i<HISTO_LENGTH; i++)
+        {
+            if(i==ind1 || i==ind2 || i==ind3)
+                continue;
+            for(size_t j=0, jend=rotHist[i].size(); j<jend; j++)
+            {
+                vMatches12[rotHist[i][j]]=-1;
+                nmatches--;
+            }
+        }
+
+    }
+
+    vMatchedPairs.clear();
+    vMatchedPairs.reserve(nmatches);
+
+    for(size_t i=0, iend=vMatches12.size(); i<iend; i++)
+    {
+        if(vMatches12[i]<0)
+            continue;
+        vMatchedPairs.push_back(make_pair(i,vMatches12[i]));
+    }
+
+    return nmatches;
+
 }
 
 } //namespace ORB_SLAM

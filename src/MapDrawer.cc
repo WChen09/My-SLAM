@@ -1,22 +1,22 @@
 /**
-* This file is part of ORB-SLAM2.
-*
-* Copyright (C) 2014-2016 Raúl Mur-Artal <raulmur at unizar dot es> (University of Zaragoza)
-* For more information see <https://github.com/raulmur/ORB_SLAM2>
-*
-* ORB-SLAM2 is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* ORB-SLAM2 is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with ORB-SLAM2. If not, see <http://www.gnu.org/licenses/>.
-*/
+ * This file is part of ORB-SLAM2.
+ *
+ * Copyright (C) 2014-2016 Raúl Mur-Artal <raulmur at unizar dot es> (University of Zaragoza)
+ * For more information see <https://github.com/raulmur/ORB_SLAM2>
+ *
+ * ORB-SLAM2 is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * ORB-SLAM2 is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ORB-SLAM2. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "MapDrawer.h"
 #include "MapPoint.h"
@@ -51,6 +51,7 @@ void MapDrawer::DrawMapPoints()
     if(vpMPs.empty())
         return;
 
+    // draw global map points (black)
     glPointSize(mPointSize);
     glBegin(GL_POINTS);
     glColor3f(0.0,0.0,0.0);
@@ -64,13 +65,14 @@ void MapDrawer::DrawMapPoints()
     }
     glEnd();
 
+    // draw local map points (red)
     glPointSize(mPointSize);
     glBegin(GL_POINTS);
     glColor3f(1.0,0.0,0.0);
 
     for(set<MapPoint*>::iterator sit=spRefMPs.begin(), send=spRefMPs.end(); sit!=send; sit++)
     {
-        if((*sit)->isBad())
+        if((*sit)->isBad() || (*sit)->mnObjectId != -1)
             continue;
         cv::Mat pos = (*sit)->GetWorldPos();
         glVertex3f(pos.at<float>(0),pos.at<float>(1),pos.at<float>(2));
@@ -78,62 +80,58 @@ void MapDrawer::DrawMapPoints()
     }
     glEnd();
 
+    glPointSize(mPointSize);
+    glBegin(GL_POINTS);
+    glColor3f(0.0,1.0,0.0);
 
-
-    for(size_t i=0, iend=vpMPs.size(); i<iend;i++)
+    for(set<MapPoint*>::iterator sit=spRefMPs.begin(), send=spRefMPs.end(); sit!=send; sit++)
     {
-        if(vpMPs[i]->isBad() || spRefMPs.count(vpMPs[i]))
+        if((*sit)->isBad() || (*sit)->mnObjectId == -1)
             continue;
-        if(vpMPs[i]->mnObjectId == -1)
-            continue;
-
-        glPointSize(mPointSize);
-        glBegin(GL_POINTS);
-        if(vpMPs[i]->mnObjectId % 2 == 1)
-            glColor3f(0.0,1.0,0.0);
-        else
-            glColor3f(0.0,1.0,1.0);
-        cv::Mat pos = vpMPs[i]->GetWorldPos();
+        cv::Mat pos = (*sit)->GetWorldPos();
         glVertex3f(pos.at<float>(0),pos.at<float>(1),pos.at<float>(2));
-        glEnd();
+
     }
+    glEnd();
 
+}
 
-//    int nObjects = mpMap->GetALLObjectMPs();
-
-//    for(int iObject = 0; iObject < nObjects; iObject++)
-//    {
-//        std::vector<MapPoint*> o;
-//        for(size_t i=0, iend=vpMPs.size(); i<iend;i++)
-//        {
-//            if(vpMPs[i]->mnObjectId == -1 || vpMPs[i]->isBad())
-//                continue;
-//            if(vpMPs[i]->mnObjectId == iObject)
-//                o.push_back(vpMPs[i]);
-//        }
-//        DrawObjectBox(o);
-//    }
-
-//    const std::vector<std::vector<MapPoint*>> vvObjectMPs = mpMap->GetObjectMapPoints();
-
-//    for(size_t iObject = 0; iObject < vvObjectMPs.size(); iObject++)
-//    {
-//        std::vector<MapPoint*> vObjectMPs = vvObjectMPs.at(iObject);
-//        DrawObjectBox(vObjectMPs);
-//    }
+void MapDrawer::DrawObjectMapPoints()
+{
+    //draw object centre point(red)
     const std::vector<cv::Point3f> vObjectPose = mpMap->GetObjectPose();
+    //    std::cout << "Object In Map " << vObjectPose.size() << std::endl;
     glPointSize(mPointSize*5);
     glBegin(GL_POINTS);
     glColor3f(1.0,0.0,0.0);
-    for(int i = 0; i < vObjectPose.size(); i++)
+    for(size_t i = 0; i < vObjectPose.size(); i++)
     {
         cv::Point3f p = vObjectPose.at(i);
         glVertex3f(p.x, p.y, p.z);
-        std::cout << p << std::endl;
+        //        std::cout << p << std::endl;
     }
 
     glEnd();
 
+//    //draw object map points(green)
+//    glPointSize(mPointSize*2);
+//    glBegin(GL_POINTS);
+//    glColor3f(0.0,1.0,0.0);
+//    const std::vector<std::vector<MapPoint*>> vvObjectMps = mpMap->GetObjectMapPoints();
+
+//    for(size_t i = 0; i < vvObjectMps.size(); i++)
+//    {
+//        std::vector<MapPoint*> iObjectMps = vvObjectMps.at(i);
+//        for(size_t j = 0; j < iObjectMps.size(); j++)
+//        {
+//            MapPoint* pMp = iObjectMps.at(j);
+//            if(pMp->isBad())
+//                continue;
+//            cv::Mat pos = pMp->GetWorldPos();
+//            glVertex3f(pos.at<float>(0),pos.at<float>(1),pos.at<float>(2));
+//        }
+//    }
+//    glEnd();
 }
 
 void MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph)
@@ -317,107 +315,121 @@ void MapDrawer::GetCurrentOpenGLCameraMatrix(pangolin::OpenGlMatrix &M)
         M.SetIdentity();
 }
 
-std::vector<float> MapDrawer::ComputeRange(std::vector<MapPoint*> & Mps)
+void MapDrawer::DrawObjectBox()
 {
-    std::vector<float> xv(Mps.size(), -1);
-    std::vector<float> yv(Mps.size(), -1);
-    std::vector<float> zv(Mps.size(), -1);
-    for(size_t iMp = 0; iMp < Mps.size(); iMp++)
+
+    std::vector<std::vector<float>> ObjectRange = mpMap->GetObjectBoundingBox();
+    std::vector<bool> LCRemove = mpMap->LCRemove;
+
+    for(size_t i = 0; i < ObjectRange.size(); i++)
     {
-        MapPoint* CurrentMp = Mps.at(iMp);
-        cv::Mat pos = CurrentMp->GetWorldPos();
-        xv.at(iMp) = pos.at<float>(0);
-        yv.at(iMp) = pos.at<float>(1);
-        zv.at(iMp) = pos.at<float>(2);
+        if(LCRemove.at(i))
+            continue;
+
+        std::vector<float> axRange = ObjectRange.at(i);
+        glLineWidth(mGraphLineWidth);
+        glColor3f(0.0f,0.0f,1.0f);
+        glBegin(GL_LINES);
+        const float minx = axRange.at(0);
+        const float maxx = axRange.at(1);
+        const float miny = axRange.at(2);
+        const float maxy = axRange.at(3);
+        const float minz = axRange.at(4);
+        const float maxz = axRange.at(5);
+
+        // bottom plane
+        glVertex3f(minx, miny, minz);
+        glVertex3f(maxx, miny, minz);
+
+        glVertex3f(maxx, miny, minz);
+        glVertex3f(maxx, maxy, minz);
+
+        glVertex3f(maxx, maxy, minz);
+        glVertex3f(minx, maxy, minz);
+
+        glVertex3f(minx, maxy, minz);
+        glVertex3f(minx, miny, minz);
+
+        // upper plane
+        glVertex3f(minx, miny, maxz);
+        glVertex3f(maxx, miny, maxz);
+
+        glVertex3f(maxx, miny, maxz);
+        glVertex3f(maxx, maxy, maxz);
+
+        glVertex3f(maxx, maxy, maxz);
+        glVertex3f(minx, maxy, maxz);
+
+        glVertex3f(minx, maxy, maxz);
+        glVertex3f(minx, miny, maxz);
+
+        // four lines
+        glVertex3f(minx, miny, minz);
+        glVertex3f(minx, miny, maxz);
+
+        glVertex3f(maxx, miny, minz);
+        glVertex3f(maxx, miny, maxz);
+
+        glVertex3f(maxx, maxy, minz);
+        glVertex3f(maxx, maxy, maxz);
+
+        glVertex3f(minx, maxy, minz);
+        glVertex3f(minx, maxy, maxz);
+
+        glEnd();
     }
-    std::vector<float> xvs;
-    std::vector<float> yvs;
-    std::vector<float> zvs;
-    cv::sort(xv, xvs, CV_SORT_ASCENDING);
-    cv::sort(yv, yvs, CV_SORT_ASCENDING);
-    cv::sort(zv, zvs, CV_SORT_ASCENDING);
 
-    float minx = xvs.at(0);
-    float maxx = xvs.at(xvs.size()-1);
+    //draw 2d object box in map
+    std::vector<std::vector<MapPoint*>> vvMps;
+    std::vector<std::vector<cv::Point3f>> vvCorners;
+    mpMap->GetBBoxInMap(vvCorners, vvMps);
 
-    float miny = yvs.at(0);
-    float maxy = yvs.at(yvs.size()-1);
+    if(vvMps.size() != 0)
+    {
+    	//MapPoints
+    	glPointSize(mPointSize*2);
+    	glBegin(GL_POINTS);
+    	glColor3f(0.0,1.0,0.0);
 
-    float minz = zvs.at(0);
-    float maxz = zvs.at(zvs.size()-1);
+    	for(size_t i = 0; i < vvMps.size(); i++)
+    	{
+    		for(size_t j = 0; j < vvMps.at(i).size(); j++)
+    		{
+    			MapPoint* iMp = vvMps.at(i).at(j);
+    			if(iMp)
+    			{
+    		        cv::Mat pos = iMp->GetWorldPos();
+    		        glVertex3f(pos.at<float>(0),pos.at<float>(1),pos.at<float>(2));
+    			}
+    		}
+    	}
+    	glEnd();
 
-    std::vector<float> out(6, 0.0);
+    	// 2D bounding box
+    	for(size_t iBox = 0; iBox < vvCorners.size(); iBox++)
+    	{
+            glLineWidth(mGraphLineWidth);
+            glColor3f(0.0f,1.0f,0.0f);
+            glBegin(GL_LINES);
 
-    out.at(0) = minx;
-    out.at(1) = maxx;
-    out.at(2) = miny;
-    out.at(3) = maxy;
-    out.at(4) = minz;
-    out.at(5) = maxz;
+            glVertex3f(vvCorners.at(iBox).at(0).x, vvCorners.at(iBox).at(0).y, vvCorners.at(iBox).at(0).z);
+            glVertex3f(vvCorners.at(iBox).at(1).x, vvCorners.at(iBox).at(1).y, vvCorners.at(iBox).at(1).z);
 
-    return out;
+            glVertex3f(vvCorners.at(iBox).at(1).x, vvCorners.at(iBox).at(1).y, vvCorners.at(iBox).at(1).z);
+            glVertex3f(vvCorners.at(iBox).at(2).x, vvCorners.at(iBox).at(2).y, vvCorners.at(iBox).at(2).z);
 
-}
+            glVertex3f(vvCorners.at(iBox).at(2).x, vvCorners.at(iBox).at(2).y, vvCorners.at(iBox).at(2).z);
+            glVertex3f(vvCorners.at(iBox).at(3).x, vvCorners.at(iBox).at(3).y, vvCorners.at(iBox).at(3).z);
 
-void MapDrawer::DrawObjectBox(std::vector<MapPoint*>&vObjectMps)
-{
+            glVertex3f(vvCorners.at(iBox).at(3).x, vvCorners.at(iBox).at(3).y, vvCorners.at(iBox).at(3).z);
+            glVertex3f(vvCorners.at(iBox).at(0).x, vvCorners.at(iBox).at(0).y, vvCorners.at(iBox).at(0).z);
 
-    glLineWidth(mGraphLineWidth);
-    glColor3f(0.0f,0.0f,1.0f);
-    glBegin(GL_LINES);
+            glEnd();
+    	}
 
-    if(vObjectMps.size() < 5)
-        return;
+    }
 
-    std::vector<float> axRange = ComputeRange(vObjectMps);
 
-    const float minx = axRange.at(0);
-    const float maxx = axRange.at(1);
-    const float miny = axRange.at(2);
-    const float maxy = axRange.at(3);
-    const float minz = axRange.at(4);
-    const float maxz = axRange.at(5);
-
-    // bottom plane
-    glVertex3f(minx, miny, minz);
-    glVertex3f(maxx, miny, minz);
-
-    glVertex3f(maxx, miny, minz);
-    glVertex3f(maxx, maxy, minz);
-
-    glVertex3f(maxx, maxy, minz);
-    glVertex3f(minx, maxy, minz);
-
-    glVertex3f(minx, maxy, minz);
-    glVertex3f(minx, miny, minz);
-
-    // upper plane
-    glVertex3f(minx, miny, maxz);
-    glVertex3f(maxx, miny, maxz);
-
-    glVertex3f(maxx, miny, maxz);
-    glVertex3f(maxx, maxy, maxz);
-
-    glVertex3f(maxx, maxy, maxz);
-    glVertex3f(minx, maxy, maxz);
-
-    glVertex3f(minx, maxy, maxz);
-    glVertex3f(minx, miny, maxz);
-
-    // four lines
-    glVertex3f(minx, miny, minz);
-    glVertex3f(minx, miny, maxz);
-
-    glVertex3f(maxx, miny, minz);
-    glVertex3f(maxx, miny, maxz);
-
-    glVertex3f(maxx, maxy, minz);
-    glVertex3f(maxx, maxy, maxz);
-
-    glVertex3f(minx, maxy, minz);
-    glVertex3f(minx, maxy, maxz);
-
-    glEnd();
 
 }
 

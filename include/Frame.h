@@ -153,12 +153,15 @@ public:
     //vector of objects in this frame
     std::vector<DetectedObject> mvObjects;
     std::vector<int> mvObjectId;
+    //for moving judge
+    void reOrgnizeFeature();
     std::vector<std::vector<cv::KeyPoint>> mvkpsInObject;
     std::vector<cv::Mat> mvdescriptorsInObject;
     // for projection, then solve the Object losing problem
     std::vector<std::vector<cv::Mat>> mvvObjectBoxCornerLocationInFrame;
     std::vector<float> mvObjectDepth;
     std::vector<std::vector<MapPoint*>> mvObjectMPs;
+    std::vector<std::vector<cv::KeyPoint>> mvObjectMPsKps;
     std::vector<cv::Point3f> mvObjectPose;
     std::vector<DetectedObject> mvLastObjectProInCurrent;
     // Vector of keypoints (original for visualization) and undistorted (actually used by the system).
@@ -220,7 +223,7 @@ public:
 
 private:
 
-    void reOrgnizeFeature();
+
     // Rotation, translation and camera center
     cv::Mat mRcw;
     cv::Mat mtcw;
